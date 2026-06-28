@@ -166,8 +166,10 @@ import '../../styles/jobs.css';
           tr.appendChild(tdId);
           tr.appendChild(el('td', { text: j.name || '(untitled)' }));
           tr.appendChild(el('td', {}, [el('span', { class: badgeClass(j.status), text: j.status })]));
-          tr.appendChild(el('td', { text: j.classifier || '—' }));
-          tr.appendChild(el('td', { text: j.source_type || '—' }));
+          const classLabels: Record<string,string> = { csf: 'CSF', smrf: 'SMRF', ptv3: 'PTv3', spt: 'SPT' };
+          const sourceLabels: Record<string,string> = { upload: 'Upload', usgs: 'USGS 3DEP', 'sample-copc': 'Sample COPC' };
+          tr.appendChild(el('td', { text: classLabels[j.classifier] || j.classifier || '—' }));
+          tr.appendChild(el('td', { text: sourceLabels[j.source_type] || j.source_type || '—' }));
           tr.appendChild(el('td', { class: 'dim', text: fmtDate(j.created_at) }));
           tbody.appendChild(tr);
         }

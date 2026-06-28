@@ -1,0 +1,219 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import '../../styles/jobs.css';
+---
+
+<Layout title="Jobs" active="jobs">
+  <main class="page">
+    <header class="page-header">
+      <h1>Classification Jobs</h1>
+      <p class="lede">Submit a new tract for ground classification or browse running and completed jobs.</p>
+    </header>
+
+    <section class="b-grid two">
+      <div class="b-card">
+        <h2>New job</h2>
+        <p class="dim">Pick a public sample to begin — real upload will activate when GPU runner is online.</p>
+
+        <form id="new-job-form" class="form">
+          <label class="field">
+            <span>Name</span>
+            <input type="text" name="name" required placeholder="e.g. Jefferson Co tract 14-NE" />
+          </label>
+
+          <label class="field">
+            <span>Source</span>
+            <select name="source_type" id="source_type">
+              <option value="sample-copc">Public COPC sample (Hobu)</option>
+              <option value="usgs">USGS 3DEP (EPT URL)</option>
+              <option value="upload">Upload .las/.laz (queues)</option>
+            </select>
+          </label>
+
+          <label class="field" id="sample-field">
+            <span>Sample</span>
+            <select name="sample" id="sample-select">
+              <option value="https://s3.amazonaws.com/hobu-lidar/autzen-classified.copc.laz">Autzen Stadium (small, ~10MB)</option>
+              <option value="https://s3.amazonaws.com/hobu-lidar/sofi.copc.laz">SoFi Stadium (medium, ~120MB)</option>
+              <option value="https://s3.amazonaws.com/hobu-lidar/millsite.copc.laz">Millsite (large, ~1.2GB)</option>
+            </select>
+          </label>
+
+          <label class="field" id="ept-field" hidden>
+            <span>USGS EPT URL</span>
+            <input type="text" name="ept_url" placeholder="https://s3.amazonaws.com/usgs-lidar-public/USGS_LPC_AL_North_2019/ept.json" />
+          </label>
+
+          <label class="field">
+            <span>Classifier</span>
+            <select name="classifier">
+              <option value="csf">CSF (Cloth Simulation Filter)</option>
+              <option value="smrf">SMRF (Simple Morphological)</option>
+              <option value="ptv3" disabled>PTv3 (coming Q4)</option>
+            </select>
+          </label>
+
+          <label class="field">
+            <span>Bounding box (optional, WKT or "minx,miny,maxx,maxy")</span>
+            <input type="text" name="bbox" placeholder="-86.78,33.50,-86.74,33.54" />
+          </label>
+
+          <label class="field check">
+            <input type="checkbox" name="auto_export" checked />
+            <span>Auto-generate DTM + 1ft contours on completion</span>
+          </label>
+
+          <div class="form-actions">
+            <button type="submit" class="btn btn-primary" id="submit-btn">Queue job</button>
+            <span id="form-status" class="dim"></span>
+          </div>
+        </form>
+      </div>
+
+      <div class="b-card">
+        <h2>Tips</h2>
+        <ul class="prose">
+          <li>Pick <strong>Autzen</strong> for a 30-second smoke test.</li>
+          <li>USGS EPT requires a tract bbox — the runner clips before classify.</li>
+          <li>CSF defaults work for hardwood + mixed pine on flat-to-rolling terrain. SMRF wins on steep slopes.</li>
+          <li>All artifacts (classified LAS/LAZ, DTM GeoTIFF, contour shapefile) are downloadable for 30 days.</li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="b-card">
+      <div class="row-between">
+        <h2>Recent jobs</h2>
+        <button class="btn btn-ghost" id="refresh-jobs">Refresh</button>
+      </div>
+      <div id="jobs-table-wrap">
+        <p class="dim" id="jobs-loading">Loading…</p>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const form = document.getElementById('new-job-form');
+    const sourceSel = document.getElementById('source_type');
+    const sampleField = document.getElementById('sample-field');
+    const eptField = document.getElementById('ept-field');
+    const statusEl = document.getElementById('form-status');
+    const submitBtn = document.getElementById('submit-btn');
+    const tableWrap = document.getElementById('jobs-table-wrap');
+    const refreshBtn = document.getElementById('refresh-jobs');
+
+    sourceSel?.addEventListener('change', () => {
+      const v = (sourceSel as HTMLSelectElement).value;
+      sampleField.hidden = v !== 'sample-copc';
+      eptField.hidden = v !== 'usgs';
+    });
+
+    function fmtDate(ts: number) {
+      if (!ts) return '—';
+      const d = new Date(ts * 1000);
+      return d.toLocaleString();
+    }
+
+    function badgeClass(status: string) {
+      const map: Record<string, string> = {
+        queued: 'badge-amber',
+        pending: 'badge-amber',
+        ingesting: 'badge-blue',
+        normalizing: 'badge-blue',
+        classifying: 'badge-blue',
+        qc: 'badge-blue',
+        exporting: 'badge-blue',
+        ready: 'badge-green',
+        complete: 'badge-green',
+        failed: 'badge-red',
+      };
+      return 'badge ' + (map[status] || 'badge-slate');
+    }
+
+    function el(tag: string, opts: any = {}, children: (Node|string)[] = []): HTMLElement {
+      const e = document.createElement(tag);
+      if (opts.class) e.className = opts.class;
+      if (opts.text != null) e.textContent = String(opts.text);
+      if (opts.href) (e as HTMLAnchorElement).href = opts.href;
+      for (const c of children) e.appendChild(typeof c === 'string' ? document.createTextNode(c) : c);
+      return e;
+    }
+
+    async function loadJobs() {
+      try {
+        const r = await fetch('/api/jobs');
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        const data = await r.json();
+        const jobs = data.jobs || [];
+        tableWrap.textContent = '';
+        if (!jobs.length) {
+          tableWrap.appendChild(el('p', { class: 'dim', text: 'No jobs yet. Queue one above to begin.' }));
+          return;
+        }
+        const table = el('table', { class: 'b-table' });
+        const thead = el('thead');
+        const trh = el('tr');
+        for (const h of ['ID','Name','Status','Classifier','Source','Created']) trh.appendChild(el('th', { text: h }));
+        thead.appendChild(trh);
+        table.appendChild(thead);
+        const tbody = el('tbody');
+        for (const j of jobs) {
+          const tr = el('tr');
+          const tdId = el('td');
+          const a = el('a', { href: '/jobs/detail/?id=' + encodeURIComponent(j.id) });
+          a.appendChild(el('code', { text: j.id }));
+          tdId.appendChild(a);
+          tr.appendChild(tdId);
+          tr.appendChild(el('td', { text: j.name || '(untitled)' }));
+          tr.appendChild(el('td', {}, [el('span', { class: badgeClass(j.status), text: j.status })]));
+          tr.appendChild(el('td', { text: j.classifier || '—' }));
+          tr.appendChild(el('td', { text: j.source_type || '—' }));
+          tr.appendChild(el('td', { class: 'dim', text: fmtDate(j.created_at) }));
+          tbody.appendChild(tr);
+        }
+        table.appendChild(tbody);
+        tableWrap.appendChild(table);
+      } catch (e) {
+        tableWrap.innerHTML = `<p class="dim">Could not load jobs: ${String(e)}</p>`;
+      }
+    }
+
+    refreshBtn?.addEventListener('click', loadJobs);
+    loadJobs();
+    setInterval(loadJobs, 8000);
+
+    form?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      submitBtn.setAttribute('disabled', 'true');
+      statusEl.textContent = 'Queuing…';
+      const fd = new FormData(form as HTMLFormElement);
+      const sourceType = String(fd.get('source_type') || 'upload');
+      let sourceUrl: string | null = null;
+      if (sourceType === 'sample-copc') sourceUrl = String(fd.get('sample') || '');
+      else if (sourceType === 'usgs') sourceUrl = String(fd.get('ept_url') || '');
+      const body: any = {
+        name: fd.get('name'),
+        source_type: sourceType,
+        classifier: fd.get('classifier'),
+        notes: (fd.get('bbox') ? `bbox: ${fd.get('bbox')}` : null),
+      };
+      if (sourceUrl) body.source_url = sourceUrl;
+      try {
+        const r = await fetch('/api/jobs', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify(body),
+        });
+        const data = await r.json();
+        if (!r.ok) throw new Error(data.error || ('HTTP ' + r.status));
+        statusEl.textContent = `Queued ${data.id}`;
+        (form as HTMLFormElement).reset();
+        loadJobs();
+      } catch (err) {
+        statusEl.textContent = 'Error: ' + String(err);
+      } finally {
+        submitBtn.removeAttribute('disabled');
+      }
+    });
+  </script>
+</Layout>

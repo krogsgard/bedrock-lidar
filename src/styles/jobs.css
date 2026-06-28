@@ -1,0 +1,71 @@
+/* Jobs UI — supplemental styles */
+
+.page { max-width: 1200px; margin: 0 auto; padding: 2rem 1.5rem 4rem; }
+.page-header { margin-bottom: 1.75rem; }
+.page-header h1 { margin: 0 0 .35rem; font-size: 2rem; }
+.page-header .lede { margin: 0; color: var(--text-muted); max-width: 60ch; }
+
+.b-grid { display: grid; gap: 1.25rem; margin-bottom: 1.25rem; }
+.b-grid.two { grid-template-columns: 1fr 1fr; }
+@media (max-width: 900px) { .b-grid.two { grid-template-columns: 1fr; } }
+
+.row-between { display: flex; justify-content: space-between; align-items: center; gap: 1rem; margin-bottom: .75rem; }
+.row-between h2 { margin: 0; }
+
+/* Forms */
+.form { display: flex; flex-direction: column; gap: .9rem; margin-top: 1rem; }
+.form .field { display: flex; flex-direction: column; gap: .3rem; }
+.form .field > span { font-size: .8rem; text-transform: uppercase; letter-spacing: .04em; color: var(--text-muted); }
+.form .field input[type="text"],
+.form .field input[type="number"],
+.form .field select,
+.form .field textarea {
+  background: rgba(0,0,0,.2);
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: 8px;
+  padding: .55rem .7rem;
+  color: inherit;
+  font: inherit;
+}
+[data-theme="light"] .form .field input,
+[data-theme="light"] .form .field select,
+[data-theme="light"] .form .field textarea {
+  background: #fff;
+  border-color: rgba(25,34,63,.18);
+}
+.form .field.check { flex-direction: row; align-items: center; gap: .55rem; }
+.form .field.check > span { text-transform: none; letter-spacing: 0; font-size: .9rem; color: inherit; }
+.form-actions { display: flex; align-items: center; gap: .75rem; margin-top: .5rem; }
+
+/* Badges */
+.badge {
+  display: inline-block;
+  padding: .15rem .55rem;
+  font-size: .72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  border-radius: 999px;
+  background: rgba(255,255,255,.08);
+  border: 1px solid rgba(255,255,255,.12);
+  color: var(--text);
+}
+.badge-green  { background: rgba(80,180,120,.18); border-color: rgba(80,180,120,.4); color: #8fd9a8; }
+.badge-blue   { background: rgba(127,168,201,.18); border-color: rgba(127,168,201,.4); color: #b4d4ee; }
+.badge-amber  { background: rgba(201,158,80,.20); border-color: rgba(201,158,80,.45); color: #ecc88a; }
+.badge-red    { background: rgba(220,90,90,.20); border-color: rgba(220,90,90,.4); color: #ffaaaa; }
+.badge-slate  { background: rgba(140,150,170,.18); border-color: rgba(140,150,170,.35); color: #c8d2e0; }
+
+[data-theme="light"] .badge-green { color: #1a6f3a; }
+[data-theme="light"] .badge-blue { color: #205075; }
+[data-theme="light"] .badge-amber { color: #875e10; }
+[data-theme="light"] .badge-red { color: #8a1c1c; }
+[data-theme="light"] .badge-slate { color: #3a4458; }
+
+.btn-danger {
+  background: rgba(220,90,90,.12);
+  border: 1px solid rgba(220,90,90,.4);
+  color: #ffaaaa;
+}
+.btn-danger:hover { background: rgba(220,90,90,.22); }
+.dim { color: var(--text-muted); }

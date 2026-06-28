@@ -1,0 +1,232 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import '../../styles/jobs.css';
+---
+
+<Layout title="Job detail" active="jobs" fullHeight={true}>
+  <main class="job-detail">
+    <header class="job-header">
+      <div>
+        <a href="/jobs/" class="back">← All jobs</a>
+        <h1 id="j-title">Loading…</h1>
+        <div class="job-meta">
+          <code id="j-id">—</code>
+          <span class="badge" id="j-status">—</span>
+          <span class="dim" id="j-classifier">—</span>
+        </div>
+      </div>
+      <div class="job-actions">
+        <button class="btn btn-ghost" id="btn-refresh">Refresh</button>
+        <button class="btn btn-danger" id="btn-delete">Delete</button>
+      </div>
+    </header>
+
+    <div class="job-grid">
+      <section class="b-card">
+        <h2>Point cloud</h2>
+        <div id="potree-shell" class="potree-shell">
+          <div class="potree-empty">
+            <p><strong>Viewer stub.</strong> Potree v2 / Deck.gl COPC viewer wires in once the job emits a streamable URL.</p>
+            <p class="dim">Demo: <a href="/viewer/">Open the prototype globe viewer →</a></p>
+          </div>
+        </div>
+        <div class="qc-toolbar">
+          <button class="btn btn-ghost qc-tool" data-tool="brush">Brush</button>
+          <button class="btn btn-ghost qc-tool" data-tool="polygon">Polygon</button>
+          <button class="btn btn-ghost qc-tool" data-tool="single">Single</button>
+          <button class="btn btn-ghost qc-tool" data-tool="undo">Undo</button>
+          <button class="btn btn-ghost qc-tool" data-tool="redo">Redo</button>
+          <select id="qc-from">
+            <option value="">From class</option>
+            <option value="2">2 — Ground</option>
+            <option value="5">5 — High vegetation</option>
+            <option value="6">6 — Building</option>
+            <option value="9">9 — Water</option>
+            <option value="1">1 — Unclassified</option>
+          </select>
+          <span class="dim">→</span>
+          <select id="qc-to">
+            <option value="">To class</option>
+            <option value="2">2 — Ground</option>
+            <option value="5">5 — High vegetation</option>
+            <option value="6">6 — Building</option>
+            <option value="9">9 — Water</option>
+            <option value="1">1 — Unclassified</option>
+          </select>
+        </div>
+        <p class="dim small">QC operations are recorded as a delta layer — original classification is never overwritten until export.</p>
+      </section>
+
+      <aside class="job-side">
+        <section class="b-card">
+          <h2>Artifacts</h2>
+          <ul class="export-list" id="export-list">
+            <li><span>Classified LAZ</span><a class="btn btn-ghost" data-export="classified">Download</a></li>
+            <li><span>DTM (GeoTIFF)</span><a class="btn btn-ghost" data-export="dtm">Download</a></li>
+            <li><span>Contours (SHP)</span><a class="btn btn-ghost" data-export="contours">Download</a></li>
+            <li><span>Raw LAS</span><a class="btn btn-ghost" data-export="las">Download</a></li>
+          </ul>
+        </section>
+
+        <section class="b-card">
+          <h2>Metrics</h2>
+          <dl class="metrics">
+            <div><dt>Points</dt><dd id="m-points">—</dd></div>
+            <div><dt>Area</dt><dd id="m-area">—</dd></div>
+            <div><dt>CRS</dt><dd id="m-iou">—</dd></div>
+            <div><dt>Edits</dt><dd id="m-edits">—</dd></div>
+            <div><dt>Source MB</dt><dd id="m-src">—</dd></div>
+            <div><dt>Created</dt><dd id="m-created">—</dd></div>
+          </dl>
+        </section>
+
+        <section class="b-card">
+          <h2>Event log</h2>
+          <ol class="event-log" id="event-log"><li class="dim">Loading…</li></ol>
+        </section>
+      </aside>
+    </div>
+  </main>
+
+  <script>
+    const params = new URLSearchParams(location.search);
+    const id = params.get('id');
+    if (!id) {
+      document.querySelector('main')!.innerHTML = '<p class="dim">No job id in URL.</p>';
+    }
+
+    const $ = (s: string) => document.querySelector(s)!;
+
+    function badgeClass(status: string) {
+      const map: Record<string, string> = {
+        queued: 'badge-amber', ingesting: 'badge-blue', classifying: 'badge-blue',
+        qc: 'badge-blue', exporting: 'badge-blue', ready: 'badge-green', failed: 'badge-red',
+      };
+      return map[status] || 'badge-slate';
+    }
+
+    function fmtDate(ts: number) {
+      if (!ts) return '—';
+      return new Date(ts * 1000).toLocaleString();
+    }
+
+    async function loadJob() {
+      try {
+        const r = await fetch(`/api/jobs/${encodeURIComponent(id!)}`);
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        const j = await r.json();
+        ($('#j-title') as HTMLElement).textContent = j.name || '(untitled)';
+        ($('#j-id') as HTMLElement).textContent = j.id;
+        const badge = $('#j-status') as HTMLElement;
+        badge.textContent = j.status;
+        badge.className = 'badge ' + badgeClass(j.status);
+        ($('#j-classifier') as HTMLElement).textContent = (j.classifier || '—') + ' · ' + (j.source_type || '—');
+        ($('#m-points') as HTMLElement).textContent = j.point_count ? Number(j.point_count).toLocaleString() : '—';
+        const haveBbox = j.bbox_min_x != null && j.bbox_max_x != null;
+        ($('#m-area') as HTMLElement).textContent = haveBbox
+          ? `${(((j.bbox_max_x - j.bbox_min_x) * (j.bbox_max_y - j.bbox_min_y)) / 4046.86).toFixed(1)} ac`
+          : '—';
+        ($('#m-iou') as HTMLElement).textContent = j.crs || '—';
+        ($('#m-edits') as HTMLElement).textContent = j.edits_count ? Number(j.edits_count).toLocaleString() : '0';
+        ($('#m-src') as HTMLElement).textContent = j.raw_bytes ? `${(j.raw_bytes / 1_048_576).toFixed(1)} MB` : '—';
+        ($('#m-created') as HTMLElement).textContent = fmtDate(j.created_at);
+        // wire export links
+        document.querySelectorAll('[data-export]').forEach((a) => {
+          const name = (a as HTMLElement).dataset.export!;
+          (a as HTMLAnchorElement).href = `/api/jobs/${encodeURIComponent(j.id)}/exports/${name}`;
+          const hasKey = !!j[`${name}_key`] || (name === 'las' && !!j.las_key);
+          if (!hasKey) (a as HTMLElement).classList.add('disabled');
+        });
+      } catch (e) {
+        ($('#j-title') as HTMLElement).textContent = 'Job not found';
+      }
+    }
+
+    async function loadEvents() {
+      try {
+        const r = await fetch(`/api/jobs/${encodeURIComponent(id!)}/events`);
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        const data = await r.json();
+        const list = data.events || [];
+        const el = $('#event-log') as HTMLElement;
+        el.textContent = '';
+        if (!list.length) {
+          const li = document.createElement('li');
+          li.className = 'dim';
+          li.textContent = 'No events yet.';
+          el.appendChild(li);
+          return;
+        }
+        for (const ev of list) {
+          const li = document.createElement('li');
+          li.className = 'ev ev-' + (ev.level || 'info');
+          const s = document.createElement('span'); s.className = 'ev-stage'; s.textContent = ev.stage || '';
+          const m = document.createElement('span'); m.className = 'ev-msg';   m.textContent = ev.message || '';
+          const t = document.createElement('span'); t.className = 'ev-ts dim'; t.textContent = fmtDate(ev.ts);
+          li.appendChild(s); li.appendChild(m); li.appendChild(t);
+          el.appendChild(li);
+        }
+      } catch (e) {
+        ($('#event-log') as HTMLElement).innerHTML = `<li class="dim">Could not load events.</li>`;
+      }
+    }
+
+    $('#btn-refresh')?.addEventListener('click', () => { loadJob(); loadEvents(); });
+    $('#btn-delete')?.addEventListener('click', async () => {
+      if (!confirm('Delete this job? Artifacts in R2 are retained.')) return;
+      const r = await fetch(`/api/jobs/${encodeURIComponent(id!)}`, { method: 'DELETE' });
+      if (r.ok) location.href = '/jobs/';
+      else alert('Delete failed: HTTP ' + r.status);
+    });
+
+    // QC tools — record op
+    document.querySelectorAll('.qc-tool').forEach((b) => {
+      b.addEventListener('click', async () => {
+        const tool = (b as HTMLElement).dataset.tool!;
+        const from = (($('#qc-from') as HTMLSelectElement).value) || null;
+        const to = (($('#qc-to') as HTMLSelectElement).value) || null;
+        const body: any = { op_type: tool };
+        if (from) body.from_class = Number(from);
+        if (to) body.to_class = Number(to);
+        await fetch(`/api/jobs/${encodeURIComponent(id!)}/qc-op`, {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify(body),
+        });
+        loadJob();
+        loadEvents();
+      });
+    });
+
+    loadJob();
+    loadEvents();
+    setInterval(() => { loadJob(); loadEvents(); }, 10000);
+  </script>
+
+  <style is:global>
+    .job-detail { padding: 1rem 1.5rem 3rem; max-width: 1400px; margin: 0 auto; }
+    .job-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; margin-bottom: 1.25rem; }
+    .job-header .back { display: inline-block; margin-bottom: .25rem; font-size: .9rem; opacity: .7; }
+    .job-header h1 { margin: 0 0 .5rem; font-size: 1.6rem; }
+    .job-meta { display: flex; align-items: center; gap: .65rem; flex-wrap: wrap; }
+    .job-actions { display: flex; gap: .5rem; }
+    .job-grid { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 1.25rem; }
+    @media (max-width: 980px) { .job-grid { grid-template-columns: 1fr; } }
+    .potree-shell { height: 460px; border-radius: 10px; background: rgba(0,0,0,.25); display: flex; align-items: center; justify-content: center; text-align: center; padding: 1.5rem; border: 1px dashed rgba(255,255,255,.08); }
+    .potree-empty p { margin: 0 0 .5rem; }
+    .qc-toolbar { display: flex; gap: .5rem; flex-wrap: wrap; margin-top: 1rem; align-items: center; }
+    .qc-toolbar select { padding: .35rem .55rem; border-radius: 6px; background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.12); color: inherit; }
+    .export-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: .5rem; }
+    .export-list li { display: flex; justify-content: space-between; align-items: center; gap: 1rem; }
+    .export-list .disabled { opacity: .35; pointer-events: none; }
+    .metrics { display: grid; grid-template-columns: 1fr 1fr; gap: .5rem 1rem; margin: 0; }
+    .metrics div { display: flex; flex-direction: column; }
+    .metrics dt { font-size: .75rem; text-transform: uppercase; letter-spacing: .04em; opacity: .55; }
+    .metrics dd { margin: 0; font-weight: 600; }
+    .event-log { list-style: none; padding: 0; margin: 0; max-height: 320px; overflow-y: auto; }
+    .ev { display: grid; grid-template-columns: 90px 1fr auto; gap: .5rem; padding: .4rem 0; border-bottom: 1px solid rgba(255,255,255,.06); font-size: .85rem; }
+    .ev-stage { font-weight: 600; opacity: .8; }
+    .ev-error .ev-stage { color: #ff8a8a; }
+    .small { font-size: .8rem; }
+  </style>
+</Layout>

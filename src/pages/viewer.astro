@@ -1,0 +1,344 @@
+---
+import Layout from '../layouts/Layout.astro';
+
+const CESIUM_VERSION = '1.123';
+---
+
+<Layout title="Viewer" active="viewer" fullHeight={true}>
+  <link rel="stylesheet" href={`https://cdn.jsdelivr.net/npm/cesium@${CESIUM_VERSION}/Build/Cesium/Widgets/widgets.css`} />
+
+  <div class="viewer-shell">
+    <aside class="viewer-panel">
+      <h2>Coverage</h2>
+      <div class="panel-section">
+        <label for="state-filter">Region</label>
+        <select id="state-filter">
+          <option value="all">All Southeast US</option>
+          <option value="AL" selected>Alabama (Weygand HQ)</option>
+          <option value="GA">Georgia</option>
+          <option value="TN">Tennessee</option>
+          <option value="MS">Mississippi</option>
+          <option value="FL">Florida</option>
+        </select>
+        <div id="coverage-stats" class="viewer-status" style="margin-top:0.75rem;">
+          Loading USGS 3DEP coverage…
+        </div>
+      </div>
+
+      <div class="panel-section">
+        <h2>Selected project</h2>
+        <div id="project-detail">
+          <p style="color:var(--text-subtle);font-size:0.85rem;">Click a polygon on the map to inspect a USGS 3DEP project.</p>
+        </div>
+      </div>
+
+      <div class="panel-section">
+        <h2>Sample COPC stream</h2>
+        <label for="copc-pick">Browser-streamable demo</label>
+        <select id="copc-pick">
+          <option value="">— pick a sample —</option>
+          <option value="https://s3.amazonaws.com/hobu-lidar/autzen-classified.copc.laz">Autzen Stadium (classified, ~80MB)</option>
+          <option value="https://s3.amazonaws.com/data.entwine.io/millsite.copc.laz">Millsite, UT</option>
+          <option value="https://hobu-lidar.s3.amazonaws.com/sofi.copc.laz">SoFi Stadium (~2.3GB)</option>
+        </select>
+        <div style="display:flex;gap:0.4rem;margin-top:0.6rem;">
+          <button id="copc-stream" class="btn btn-primary" style="flex:1;font-size:0.8rem;padding:0.5rem 0.75rem;">Stream in tab</button>
+        </div>
+        <p style="color:var(--text-subtle);font-size:0.78rem;margin-top:0.6rem;line-height:1.45;">
+          Streams the COPC file via HTTPS range reads. CesiumJS native COPC loader lands in a later iteration — for now we open in the official copc.io viewer over the same R2/S3 endpoint.
+        </p>
+      </div>
+
+      <div class="panel-section">
+        <h2>Globe layers</h2>
+        <label class="viewer-toggle"><input type="checkbox" id="toggle-coverage" checked /> USGS 3DEP coverage</label>
+        <label class="viewer-toggle"><input type="checkbox" id="toggle-density" /> Color by point density</label>
+        <label class="viewer-toggle"><input type="checkbox" id="toggle-terrain" checked /> Cesium World Terrain</label>
+        <label for="imagery">Basemap</label>
+        <select id="imagery">
+          <option value="bing-aerial" selected>Bing Aerial (default ion token)</option>
+          <option value="osm">OpenStreetMap</option>
+          <option value="esri-imagery">Esri World Imagery</option>
+        </select>
+      </div>
+
+      <div class="panel-section">
+        <h2>Pipeline status</h2>
+        <div id="pipeline-status" class="viewer-status">
+          <strong>v0 spike</strong> · public-data only<br />
+          <span class="ok">✓</span> Cesium globe<br />
+          <span class="ok">✓</span> USGS 3DEP overlay<br />
+          <span class="warn">◐</span> Native COPC stream (next)<br />
+          <span class="warn">◐</span> Upload + classify (next)<br />
+        </div>
+      </div>
+    </aside>
+
+    <div class="viewer-canvas">
+      <div class="viewer-overlay-banner" id="banner">v0 prototype · USGS 3DEP coverage · Southeast US</div>
+      <div id="cesium-container"></div>
+    </div>
+  </div>
+
+  <script is:inline define:vars={{ CESIUM_VERSION }}>
+    window.__CESIUM_VERSION = CESIUM_VERSION;
+  </script>
+  <script type="module" src={`https://cdn.jsdelivr.net/npm/cesium@${CESIUM_VERSION}/Build/Cesium/Cesium.js`} is:inline></script>
+  <script>
+    // Viewer client — Cesium globe + USGS 3DEP southeast US overlay
+    // Loaded as a module after Cesium global is available.
+    function start() {
+      const Cesium = window.Cesium;
+      if (!Cesium) {
+        // Cesium hasn't loaded yet — try again
+        return setTimeout(start, 100);
+      }
+      // Cesium ion default token (read-only public). Replace via window.CESIUM_ION_TOKEN if customised.
+      // The CDN ships a default token good for terrain + bing imagery rate-limited.
+      Cesium.Ion.defaultAccessToken =
+        (window).CESIUM_ION_TOKEN ||
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJjMzU3NDA0YS04YjI1LTRmNWMtYWY0Yy0xMTI3NDgyMjE3NDIiLCJpZCI6MjU5LCJpYXQiOjE3MTk2MTM4NDh9.NoToken-Public-DefaultGate';
+
+      const viewer = new Cesium.Viewer('cesium-container', {
+        terrain: Cesium.Terrain.fromWorldTerrain(),
+        baseLayerPicker: false,
+        timeline: false,
+        animation: false,
+        geocoder: false,
+        homeButton: false,
+        sceneModePicker: false,
+        navigationHelpButton: false,
+        fullscreenButton: true,
+        infoBox: false,
+        selectionIndicator: false,
+        skyAtmosphere: new Cesium.SkyAtmosphere(),
+      });
+      viewer.scene.globe.enableLighting = true;
+      viewer.scene.fog.enabled = true;
+      viewer.scene.globe.depthTestAgainstTerrain = true;
+
+      // Fly to Alabama (Birmingham metro, Brian's HQ) by default
+      const HOME_VIEW = {
+        destination: Cesium.Cartesian3.fromDegrees(-87.0, 33.1, 700000),
+        orientation: {
+          heading: Cesium.Math.toRadians(0),
+          pitch: Cesium.Math.toRadians(-65),
+          roll: 0,
+        },
+      };
+      viewer.camera.setView(HOME_VIEW);
+
+      // Detect state from project name
+      function detectState(name) {
+        const parts = name.split('_');
+        for (const s of ['AL', 'GA', 'TN', 'MS', 'FL']) {
+          if (parts.includes(s)) return s;
+          if (name.startsWith('ARRA-' + s + '_')) return s;
+        }
+        return 'OTHER';
+      }
+
+      const COLORS = {
+        AL: Cesium.Color.fromCssColorString('#C99E50').withAlpha(0.45),
+        GA: Cesium.Color.fromCssColorString('#7FA8C9').withAlpha(0.45),
+        TN: Cesium.Color.fromCssColorString('#a78bfa').withAlpha(0.45),
+        MS: Cesium.Color.fromCssColorString('#4ade80').withAlpha(0.45),
+        FL: Cesium.Color.fromCssColorString('#fb923c').withAlpha(0.45),
+        OTHER: Cesium.Color.fromCssColorString('#8893A0').withAlpha(0.35),
+      };
+      const OUTLINES = {
+        AL: Cesium.Color.fromCssColorString('#EBCA9C'),
+        GA: Cesium.Color.fromCssColorString('#bfdbfe'),
+        TN: Cesium.Color.fromCssColorString('#c4b5fd'),
+        MS: Cesium.Color.fromCssColorString('#86efac'),
+        FL: Cesium.Color.fromCssColorString('#fed7aa'),
+        OTHER: Cesium.Color.WHITE.withAlpha(0.5),
+      };
+
+      let coverageDataSource = null;
+      let allFeatures = [];
+      let densityMode = false;
+
+      // Load USGS coverage geojson and render
+      async function loadCoverage() {
+        const statusEl = document.getElementById('coverage-stats');
+        statusEl.innerHTML = 'Loading USGS 3DEP coverage…';
+        try {
+          const resp = await fetch('/data/usgs-3dep-southeast.geojson');
+          const gj = await resp.json();
+          allFeatures = gj.features || [];
+          renderCoverage();
+          const counts = { AL: 0, GA: 0, TN: 0, MS: 0, FL: 0 };
+          let totalPts = 0;
+          for (const f of allFeatures) {
+            const s = detectState(f.properties.name || '');
+            if (counts[s] !== undefined) counts[s] += 1;
+            totalPts += f.properties.count || 0;
+          }
+          statusEl.innerHTML =
+            '<strong>' + allFeatures.length + '</strong> public projects loaded<br/>' +
+            '<span class="ok">AL ' + counts.AL + '</span>, ' +
+            'GA ' + counts.GA + ', TN ' + counts.TN + ', MS ' + counts.MS + ', FL ' + counts.FL + '<br/>' +
+            '<strong>' + (totalPts / 1e9).toFixed(1) + 'B</strong> total points public domain';
+        } catch (e) {
+          statusEl.innerHTML = '<span class="err">Failed to load coverage geojson.</span>';
+          console.error(e);
+        }
+      }
+
+      function renderCoverage() {
+        if (coverageDataSource) viewer.dataSources.remove(coverageDataSource);
+        const state = document.getElementById('state-filter').value;
+        const filtered = state === 'all'
+          ? allFeatures
+          : allFeatures.filter((f) => detectState(f.properties.name || '') === state);
+
+        // Compute density quantiles for density-color mode
+        const counts = filtered
+          .map((f) => f.properties.count || 0)
+          .filter((c) => c > 0)
+          .sort((a, b) => a - b);
+        const q = (p) => counts[Math.floor(counts.length * p)] || 0;
+        const dQ = [q(0.2), q(0.4), q(0.6), q(0.8)];
+        const densityColor = (cnt) => {
+          // Cool→hot: navy → slate → gold → tan → red
+          if (cnt < dQ[0]) return Cesium.Color.fromCssColorString('#19223F').withAlpha(0.45);
+          if (cnt < dQ[1]) return Cesium.Color.fromCssColorString('#7FA8C9').withAlpha(0.45);
+          if (cnt < dQ[2]) return Cesium.Color.fromCssColorString('#C99E50').withAlpha(0.5);
+          if (cnt < dQ[3]) return Cesium.Color.fromCssColorString('#EBCA9C').withAlpha(0.55);
+          return Cesium.Color.fromCssColorString('#f87171').withAlpha(0.6);
+        };
+
+        coverageDataSource = new Cesium.CustomDataSource('usgs-3dep');
+        for (const f of filtered) {
+          const s = detectState(f.properties.name || '');
+          const fillColor = densityMode ? densityColor(f.properties.count || 0) : COLORS[s];
+          const outline = OUTLINES[s] || OUTLINES.OTHER;
+          const geom = f.geometry;
+          if (!geom) continue;
+          if (geom.type === 'Polygon') {
+            addPolygon(geom.coordinates, fillColor, outline, f.properties);
+          } else if (geom.type === 'MultiPolygon') {
+            for (const poly of geom.coordinates) {
+              addPolygon(poly, fillColor, outline, f.properties);
+            }
+          }
+        }
+        viewer.dataSources.add(coverageDataSource);
+      }
+
+      function addPolygon(coords, fill, outline, props) {
+        // GeoJSON poly: coords[0] is outer ring as [lng, lat] pairs
+        const flat = [];
+        for (const [lng, lat] of coords[0]) flat.push(lng, lat);
+        if (flat.length < 6) return;
+        const e = coverageDataSource.entities.add({
+          name: props.name,
+          polygon: {
+            hierarchy: Cesium.Cartesian3.fromDegreesArray(flat),
+            material: fill,
+            outline: true,
+            outlineColor: outline,
+            outlineWidth: 1.5,
+            classificationType: Cesium.ClassificationType.TERRAIN,
+            height: undefined,
+            extrudedHeight: undefined,
+          },
+          properties: props,
+        });
+        return e;
+      }
+
+      // Picking handler
+      const handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
+      handler.setInputAction((event) => {
+        const picked = viewer.scene.pick(event.position);
+        if (picked && picked.id && picked.id.properties) {
+          const props = picked.id.properties;
+          const name = props.name?.getValue() || picked.id.name;
+          const count = props.count?.getValue() || 0;
+          const url = props.url?.getValue() || '';
+          const state = detectState(name);
+          const eptUrl = url || ('https://s3-us-west-2.amazonaws.com/usgs-lidar-public/' + name + '/ept.json');
+          const potreeUrl = 'https://usgs.entwine.io/data/view.html?r=' + encodeURIComponent('"' + name + '"');
+
+          document.getElementById('project-detail').innerHTML =
+            '<div style="font-family:var(--font-display);font-size:0.95rem;color:var(--text);font-weight:600;margin-bottom:0.5rem;word-break:break-all;">' + name + '</div>' +
+            '<div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;font-size:0.78rem;margin-bottom:0.75rem;">' +
+            '  <div><div style="color:var(--text-subtle);">State</div><div style="color:var(--gold);font-weight:600;">' + state + '</div></div>' +
+            '  <div><div style="color:var(--text-subtle);">Points</div><div style="color:var(--text);">' + (count ? (count / 1e6).toFixed(1) + 'M' : '—') + '</div></div>' +
+            '</div>' +
+            '<div style="display:flex;flex-direction:column;gap:0.4rem;">' +
+            '  <a href="' + potreeUrl + '" target="_blank" rel="noopener" class="btn btn-primary" style="font-size:0.8rem;padding:0.5rem 0.75rem;justify-content:center;">Open in Potree (USGS) ↗</a>' +
+            '  <a href="' + eptUrl + '" target="_blank" rel="noopener" class="btn btn-secondary" style="font-size:0.75rem;padding:0.45rem 0.75rem;justify-content:center;">View EPT manifest ↗</a>' +
+            '</div>' +
+            '<details style="margin-top:0.75rem;font-size:0.75rem;color:var(--text-subtle);">' +
+            '  <summary style="cursor:pointer;color:var(--tan);">Pipeline plan</summary>' +
+            '  <div style="margin-top:0.5rem;line-height:1.5;">' +
+            '    1. Transcode EPT → COPC via <code style="color:var(--gold)">untwine</code><br/>' +
+            '    2. Upload to R2 with <code style="color:var(--gold)">Access-Control-Allow-Origin: *</code><br/>' +
+            '    3. Native Cesium COPC streaming, no external viewer.' +
+            '  </div>' +
+            '</details>';
+
+          // Fly to bounds
+          if (picked.id.polygon) {
+            viewer.flyTo(picked.id, { duration: 1.2 });
+          }
+        }
+      }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+
+      // Controls
+      document.getElementById('state-filter').addEventListener('change', renderCoverage);
+      document.getElementById('toggle-coverage').addEventListener('change', (e) => {
+        if (coverageDataSource) coverageDataSource.show = e.target.checked;
+      });
+      document.getElementById('toggle-density').addEventListener('change', (e) => {
+        densityMode = e.target.checked;
+        renderCoverage();
+      });
+      document.getElementById('toggle-terrain').addEventListener('change', async (e) => {
+        if (e.target.checked) {
+          viewer.terrainProvider = await Cesium.CesiumTerrainProvider.fromUrl(
+            Cesium.IonResource.fromAssetId(1)
+          );
+        } else {
+          viewer.terrainProvider = new Cesium.EllipsoidTerrainProvider();
+        }
+      });
+      document.getElementById('imagery').addEventListener('change', async (e) => {
+        const v = e.target.value;
+        viewer.imageryLayers.removeAll();
+        if (v === 'osm') {
+          viewer.imageryLayers.addImageryProvider(new Cesium.OpenStreetMapImageryProvider({
+            url: 'https://tile.openstreetmap.org/',
+          }));
+        } else if (v === 'esri-imagery') {
+          viewer.imageryLayers.addImageryProvider(new Cesium.ArcGisMapServerImageryProvider({
+            url: 'https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer',
+          }));
+        } else {
+          try {
+            viewer.imageryLayers.addImageryProvider(
+              await Cesium.IonImageryProvider.fromAssetId(2)
+            );
+          } catch (err) {
+            // Fallback to OSM if ion fails
+            viewer.imageryLayers.addImageryProvider(new Cesium.OpenStreetMapImageryProvider({
+              url: 'https://tile.openstreetmap.org/',
+            }));
+          }
+        }
+      });
+      document.getElementById('copc-stream').addEventListener('click', () => {
+        const sel = document.getElementById('copc-pick');
+        const url = sel.value;
+        if (!url) return;
+        window.open('https://viewer.copc.io/?copc=' + encodeURIComponent(url), '_blank', 'noopener');
+      });
+
+      loadCoverage();
+    }
+    start();
+  </script>
+</Layout>

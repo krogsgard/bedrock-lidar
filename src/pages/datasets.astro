@@ -1,0 +1,137 @@
+---
+import Layout from '../layouts/Layout.astro';
+
+interface Sample {
+  name: string;
+  url: string;
+  size: string;
+  classified: boolean;
+  notes: string;
+}
+
+const copcSamples: Sample[] = [
+  { name: 'Autzen Stadium', url: 'https://s3.amazonaws.com/hobu-lidar/autzen-classified.copc.laz', size: '~80 MB', classified: true, notes: 'RGB + ASPRS classified. The canonical COPC demo.' },
+  { name: 'Millsite, UT', url: 'https://s3.amazonaws.com/data.entwine.io/millsite.copc.laz', size: 'medium', classified: true, notes: 'Open terrain. Good for fly-through demos.' },
+  { name: 'SoFi Stadium', url: 'https://hobu-lidar.s3.amazonaws.com/sofi.copc.laz', size: '~2.3 GB', classified: false, notes: 'Very large. Proves streaming works at GB scale.' },
+];
+
+const usgsProjects = [
+  { name: 'USGS_LPC_AL_JeffersonCo_2013_LAS_2015', desc: 'Jefferson County (Birmingham metro). Direct hit for Weygand HQ.', state: 'AL' },
+  { name: 'AL_NorthAL_2019', desc: 'Madison / Limestone / Jackson / Morgan / Marshall. High-density 2019.', state: 'AL' },
+  { name: 'AL_17Co_1_2020', desc: '17-county central Alabama, 2020. Broadest recent coverage.', state: 'AL' },
+  { name: 'AL_SWCentral_1_B22', desc: 'Southwest Central Alabama, 2022. Newest available.', state: 'AL' },
+  { name: 'USGS_LPC_AL_MobileCo_2014_LAS_2016', desc: 'Mobile County. Coastal AL.', state: 'AL' },
+  { name: 'USGS_LPC_TN_ShelbyCo_2017_LAS_2019', desc: 'Memphis metro.', state: 'TN' },
+  { name: 'USGS_LPC_GA_Georgia_A1_2016_LAS_2018', desc: 'Georgia statewide block A1.', state: 'GA' },
+  { name: 'USGS_LPC_MS_Madison_Yazoo_2012_LAS_2016', desc: 'Madison / Yazoo, MS.', state: 'MS' },
+  { name: 'USGS_LPC_FL_Panhandle_B1_2018_LAS_2019', desc: 'Florida panhandle (Pensacola area).', state: 'FL' },
+];
+
+const academic = [
+  { name: 'DALES', size: '~500M pts', license: 'Academic (request)', notes: 'Largest public ALS benchmark, 8 semantic classes. Dayton, OH.', url: 'https://go.udayton.edu/dales3d' },
+  { name: 'Hessigheim 3D (H3D)', size: '~10 GB', license: 'Research (registration)', notes: 'UAV LiDAR ~800 pts/m² + textured mesh. Closest match for our use case.', url: 'https://ifpwww.ifp.uni-stuttgart.de/benchmark/hessigheim/default.aspx' },
+  { name: 'OpenGF', size: '~500M pts / 47 km²', license: 'Academic', notes: 'Ground filtering benchmark. Direct relevance.', url: 'https://github.com/Nathan-UW/OpenGF' },
+  { name: 'Toronto3D', size: '78M pts', license: 'Academic', notes: 'Mobile mapping LIDAR, 8 classes.', url: 'https://github.com/WeikaiTan/Toronto-3D' },
+  { name: 'SensatUrban', size: '2.85B pts', license: 'Academic', notes: 'UK urban UAV. Recent benchmark.', url: 'https://github.com/QingyongHu/SensatUrban' },
+];
+---
+
+<Layout title="Datasets" active="datasets">
+  <section class="section" style="padding-top:5rem;">
+    <div class="container">
+      <div class="section-eyebrow">Public LIDAR sources</div>
+      <h2 class="section-title">Everything we can stream today, without an API key.</h2>
+      <p class="section-lede">
+        These are the public datasets powering the v0 prototype. The USGS 3DEP coverage spans Brian's full licensure footprint (AL, GA, TN, MS, FL) — 247 projects, 30B+ public-domain points. The Hobu COPC samples are browser-streamable today. The academic benchmarks anchor our model training plan.
+      </p>
+
+      <div class="feature-banner" style="margin-bottom:2.5rem;">
+        <div class="banner-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+        </div>
+        <div>
+          <h4>v0 demo path</h4>
+          <p>Phase 1 (today): three Hobu COPC files stream directly via HTTPS range reads. Phase 2: transcode one Alabama EPT to COPC via <code>untwine</code>, host on R2 with CORS, native CesiumJS streaming.</p>
+        </div>
+      </div>
+
+      <h3 style="font-family:var(--font-display);color:var(--gold);font-size:1.25rem;margin:2rem 0 1rem;">Browser-streamable COPC (Hobu demos)</h3>
+      <div class="b-table-wrap">
+        <table class="b-table">
+          <thead>
+            <tr><th>Name</th><th>Size</th><th>Classified</th><th>Notes</th><th>Stream</th></tr>
+          </thead>
+          <tbody>
+            {copcSamples.map((s) => (
+              <tr>
+                <td><strong>{s.name}</strong></td>
+                <td>{s.size}</td>
+                <td>{s.classified ? '✓' : '—'}</td>
+                <td>{s.notes}</td>
+                <td><a href={`https://viewer.copc.io/?copc=${encodeURIComponent(s.url)}`} target="_blank" rel="noopener" class="btn btn-secondary" style="font-size:0.75rem;padding:0.3rem 0.6rem;">View ↗</a></td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      <h3 style="font-family:var(--font-display);color:var(--gold);font-size:1.25rem;margin:2.5rem 0 1rem;">USGS 3DEP — Southeast US (247 projects)</h3>
+      <p style="color:var(--text-muted);margin-bottom:1rem;font-size:0.95rem;">
+        Public domain. Hosted on AWS Open Data (<code>s3://usgs-lidar-public</code>, us-west-2). EPT format — native to Potree 2.0, transcodes to COPC via <code>untwine</code>.
+      </p>
+      <div class="b-table-wrap">
+        <table class="b-table">
+          <thead>
+            <tr><th>Project</th><th>State</th><th>Notes</th><th>EPT manifest</th></tr>
+          </thead>
+          <tbody>
+            {usgsProjects.map((p) => (
+              <tr>
+                <td><strong>{p.name}</strong></td>
+                <td>{p.state}</td>
+                <td>{p.desc}</td>
+                <td><a href={`https://s3-us-west-2.amazonaws.com/usgs-lidar-public/${p.name}/ept.json`} target="_blank" rel="noopener">ept.json ↗</a></td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <p style="color:var(--text-subtle);font-size:0.85rem;margin-top:0.75rem;">
+        Full list: 247 projects rendered on the <a href="/viewer/">/viewer</a> map. Boundary index: <a href="https://github.com/hobuinc/usgs-lidar" target="_blank" rel="noopener">github.com/hobuinc/usgs-lidar</a>.
+      </p>
+
+      <h3 style="font-family:var(--font-display);color:var(--gold);font-size:1.25rem;margin:2.5rem 0 1rem;">Academic benchmarks (training data)</h3>
+      <p style="color:var(--text-muted);margin-bottom:1rem;font-size:0.95rem;">
+        These are the canonical benchmarks for ground-classification ML. We pretrain on these (esp. DALES + OpenGF + Hessigheim) before fine-tuning on Weygand-labeled tracts.
+      </p>
+      <div class="b-table-wrap">
+        <table class="b-table">
+          <thead>
+            <tr><th>Dataset</th><th>Size</th><th>License</th><th>Notes</th><th>Link</th></tr>
+          </thead>
+          <tbody>
+            {academic.map((a) => (
+              <tr>
+                <td><strong>{a.name}</strong></td>
+                <td>{a.size}</td>
+                <td>{a.license}</td>
+                <td>{a.notes}</td>
+                <td><a href={a.url} target="_blank" rel="noopener">↗</a></td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      <h3 style="font-family:var(--font-display);color:var(--gold);font-size:1.25rem;margin:2.5rem 0 1rem;">OpenTopography</h3>
+      <p style="color:var(--text-muted);margin-bottom:1rem;font-size:0.95rem;">
+        OpenTopography hosts raw LAZ tiles per dataset with shapefile tile indexes. The intended workflow: query Catalog API → download tile index → PDAL merges selected tiles into a COPC you self-host. Not a one-URL drop-in but the highest-quality source for academic / research demos.
+      </p>
+      <ul style="color:var(--text-muted);line-height:1.7;">
+        <li>Portal: <a href="https://portal.opentopography.org/dataCatalog" target="_blank" rel="noopener">portal.opentopography.org/dataCatalog</a></li>
+        <li>Tile-index access guide: <a href="https://opentopography.org/blog/programmatic-access-opentopographys-point-cloud-data-tile-indexes" target="_blank" rel="noopener">opentopography.org blog</a></li>
+        <li>License: per-dataset, mostly CC-BY 4.0</li>
+      </ul>
+    </div>
+  </section>
+</Layout>

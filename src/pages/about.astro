@@ -1,0 +1,55 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout title="About" active="about">
+  <section class="section" style="padding-top:5rem;">
+    <div class="container">
+      <div class="section-eyebrow">About Bedrock</div>
+      <h2 class="section-title">Built by surveyors. Funded by the labor it saves.</h2>
+      <p class="section-lede">
+        Bedrock is a Weygand project. It exists because the dense-canopy ground classification problem has been costing our surveyors hours per job and nobody else has the right combination of cloud architecture, ML training data, and surveyor workflow knowledge to solve it the way we need.
+      </p>
+
+      <div class="b-card-grid" style="margin:2rem 0;">
+        <div class="b-card">
+          <div class="b-card-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+          </div>
+          <h3>Weygand Land Surveying</h3>
+          <p>Birmingham, Alabama. PLS in AL, GA, TN, MS, FL. Drone lidar in production since the TrueView Lite landed at $19K. The reason Bedrock has heavy-vegetation training data nobody else can buy.</p>
+        </div>
+        <div class="b-card">
+          <div class="b-card-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/></svg>
+          </div>
+          <h3>MayAI</h3>
+          <p>Bedrock is one mission inside the MayAI operations platform. May is the chief of staff coordinating it across phases — scoping, building, deploying, iterating.</p>
+        </div>
+        <div class="b-card">
+          <div class="b-card-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          </div>
+          <h3>v0 timeline</h3>
+          <p>Scope brief: 2026-06-27. v0 scaffold: 2026-06-28 (overnight build). Phase 0 spike: target 2 weeks. Phase 1 internal: Q3 2026.</p>
+        </div>
+      </div>
+
+      <div class="section-eyebrow" style="margin-top:3rem;">Open work</div>
+      <h2 class="section-title">What's next.</h2>
+      <ol style="color:var(--text-muted);line-height:1.8;margin-left:1.5rem;">
+        <li>Pick three Weygand flights spanning canopy diversity (open, moderate, heavy dense).</li>
+        <li>Push through real PDAL+CSF pipeline on may-cloud, write COPC to R2.</li>
+        <li>Stand up native COPC streaming in the Bedrock viewer (no iframe).</li>
+        <li>Measure: wall-clock processing time, cleanup hours, DTM RMSE vs LP360.</li>
+        <li>Decision gate: does the time-savings delta justify Phase 1?</li>
+      </ol>
+
+      <div class="section-eyebrow" style="margin-top:3rem;">Contact</div>
+      <h2 class="section-title">Get in touch.</h2>
+      <p style="color:var(--text-muted);">
+        Brian Krogsgard · <a href="mailto:hello@weygand.com">hello@weygand.com</a> · <a href="https://github.com/krogsgard/bedrock-lidar" target="_blank" rel="noopener">github.com/krogsgard/bedrock-lidar</a>
+      </p>
+    </div>
+  </section>
+</Layout>

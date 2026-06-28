@@ -1,0 +1,138 @@
+---
+import '../styles/global.css';
+import '../styles/bedrock.css';
+
+interface Props {
+  title: string;
+  description?: string;
+  fullHeight?: boolean;
+  active?: string; // nav slug for active state
+}
+
+const {
+  title,
+  description = 'Cloud-native drone lidar ground classification, built by surveyors for heavy-vegetation tracts.',
+  fullHeight = false,
+  active = '',
+} = Astro.props;
+
+const navLinks = [
+  { slug: 'home', href: '/', label: 'Home' },
+  { slug: 'viewer', href: '/viewer/', label: 'Viewer' },
+  { slug: 'datasets', href: '/datasets/', label: 'Datasets' },
+  { slug: 'pipeline', href: '/pipeline/', label: 'Pipeline' },
+  { slug: 'scope', href: '/scope/', label: 'Scope' },
+  { slug: 'about', href: '/about/', label: 'About' },
+];
+---
+
+<!doctype html>
+<html lang="en" data-theme="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content={description} />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>{title} — Bedrock</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="theme-color" content="#19223F" id="meta-theme-color" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <link rel="apple-touch-icon" href="/icon-192.png" />
+
+    <!-- Pre-paint theme bootstrap (avoid FOWT) -->
+    <script is:inline>
+      (function(){
+        try {
+          var stored = localStorage.getItem('bedrock-theme');
+          var theme = stored;
+          if (theme !== 'light' && theme !== 'dark') {
+            theme = (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) ? 'light' : 'dark';
+          }
+          document.documentElement.dataset.theme = theme;
+          var meta = document.querySelector('meta[name="theme-color"]');
+          if (meta) meta.setAttribute('content', theme === 'light' ? '#f7f3ec' : '#19223F');
+        } catch(e) {
+          document.documentElement.dataset.theme = 'dark';
+        }
+      })();
+    </script>
+  </head>
+  <body class={fullHeight ? 'full-height' : ''}>
+    <nav class="nav">
+      <div class="nav-inner">
+        <a href="/" class="nav-logo">
+          <img src="/logo.svg" alt="Weygand" class="nav-logo-img" data-logo-light="/logo-navy.svg" data-logo-dark="/logo.svg" />
+          <span class="nav-logo-sub">Bedrock</span>
+        </a>
+        <button class="nav-toggle" id="nav-toggle" aria-label="Menu" aria-expanded="false">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+        </button>
+        <ul class="nav-links" id="nav-links">
+          {navLinks.map((l) => (
+            <li><a href={l.href} class={active === l.slug ? 'active' : ''}>{l.label}</a></li>
+          ))}
+          <li>
+            <button class="theme-toggle" id="theme-toggle" aria-label="Toggle theme" title="Toggle theme">
+              <svg class="icon-sun" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+              <svg class="icon-moon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+            </button>
+          </li>
+        </ul>
+      </div>
+    </nav>
+
+    <slot />
+
+    <footer class="site-footer">
+      <div class="container footer-inner">
+        <div class="footer-left">
+          <span class="footer-brand">Bedrock</span>
+          <span class="footer-sub">a Weygand project · v0 prototype</span>
+        </div>
+        <div class="footer-right">
+          <a href="/scope/">Scope</a>
+          <a href="https://github.com/krogsgard/bedrock-lidar" target="_blank" rel="noopener">GitHub</a>
+          <a href="mailto:hello@weygand.com">Contact</a>
+        </div>
+      </div>
+    </footer>
+
+    <script is:inline>
+      // Theme toggle
+      (function(){
+        var btn = document.getElementById('theme-toggle');
+        if (!btn) return;
+        btn.addEventListener('click', function(){
+          var cur = document.documentElement.dataset.theme;
+          var next = cur === 'light' ? 'dark' : 'light';
+          document.documentElement.dataset.theme = next;
+          try { localStorage.setItem('bedrock-theme', next); } catch(e){}
+          var meta = document.querySelector('meta[name="theme-color"]');
+          if (meta) meta.setAttribute('content', next === 'light' ? '#f7f3ec' : '#19223F');
+          // swap logo
+          document.querySelectorAll('img[data-logo-light]').forEach(function(img){
+            img.src = next === 'light' ? img.dataset.logoLight : img.dataset.logoDark;
+          });
+        });
+        // initial logo set
+        var t = document.documentElement.dataset.theme;
+        document.querySelectorAll('img[data-logo-light]').forEach(function(img){
+          img.src = t === 'light' ? img.dataset.logoLight : img.dataset.logoDark;
+        });
+      })();
+
+      // Mobile nav toggle
+      (function(){
+        var t = document.getElementById('nav-toggle');
+        var l = document.getElementById('nav-links');
+        if (!t || !l) return;
+        t.addEventListener('click', function(){
+          var open = l.classList.toggle('open');
+          t.setAttribute('aria-expanded', open ? 'true' : 'false');
+        });
+      })();
+    </script>
+  </body>
+</html>

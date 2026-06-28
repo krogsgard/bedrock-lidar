@@ -1,0 +1,1788 @@
+@import url('https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700;900&family=Noto+Sans+Display:wght@400;500;600;700&display=swap');
+
+/* ========================================
+   CSS VARIABLES — dark theme defaults
+   Light theme rebinds these under html[data-theme="light"] below.
+   ======================================== */
+:root {
+  --navy: #19223F;
+  --navy-dark: #0d1117;
+  --navy-mid: #1e2d4a;
+  --gold: #C99E50;
+  --tan: #EBCA9C;
+  --slate: #7FA8C9;
+  --off-white: #B0B8C4;
+  --muted: #8893A0;
+  --white: #ffffff;
+  --pure-white: #ffffff;              /* always literal white (e.g. badge text) */
+  --card-bg: #1a2540;
+  --card-border: rgba(201, 158, 80, 0.2);
+  --card-border-hover: rgba(201, 158, 80, 0.6);
+  --nav-height: 64px;
+  --font-primary: 'Lato', system-ui, sans-serif;
+  --font-display: 'Noto Sans Display', 'Lato', system-ui, sans-serif;
+
+  /* Semantic surface tokens (named consistently across themes) */
+  --bg: #0d1117;
+  --bg-elevated: #1a2540;
+  --bg-sunken: #0a0e13;
+  --text: #ffffff;
+  --text-muted: #B0B8C4;
+  --text-subtle: #8893A0;
+  --border: rgba(201, 158, 80, 0.2);
+  --border-strong: rgba(201, 158, 80, 0.55);
+  --gold-hover: #EBCA9C;
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.3);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.35);
+}
+
+/* ========================================
+   LIGHT THEME — warm paper palette
+   Rebinds existing tokens so unchanged CSS inverts cleanly.
+   ======================================== */
+html[data-theme="light"] {
+  /* Core surface + text */
+  --bg: #f7f3ec;
+  --bg-elevated: #ffffff;
+  --bg-sunken: #f0ead9;
+  --text: #19223F;
+  --text-muted: #6b6452;
+  --text-subtle: #8a8470;
+  --border: #e7dfd1;
+  --border-strong: #cdc2ad;
+  --gold-hover: #8a6f37;
+  --shadow-sm: 0 1px 2px rgba(74,55,16,0.06);
+  --shadow-md: 0 4px 12px rgba(74,55,16,0.08);
+
+  /* Aliased existing tokens so legacy rules invert without rewrites */
+  --navy-dark: #f7f3ec;         /* body / page bg slot */
+  --navy: #19223F;              /* stays — used as text/contrast */
+  --navy-mid: #efe7d4;          /* select option bg */
+  --card-bg: #ffffff;
+  --card-border: #e7dfd1;
+  --card-border-hover: rgba(201, 158, 80, 0.55);
+  --white: #19223F;             /* text slot — navy on paper */
+  --off-white: #3a4255;         /* body text */
+  --muted: #6b6452;
+  --tan: #8a6f37;               /* darker gold so hovers read on white */
+  /* --gold and --slate stay the same — brand colors */
+  /* --pure-white stays #ffffff — used where literal white is required */
+}
+
+/* Smooth theme transition on key surfaces */
+html[data-theme] body,
+html[data-theme] .nav,
+html[data-theme] .card,
+html[data-theme] .site-footer {
+  transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+/* ========================================
+   RESET & BASE
+   ======================================== */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  font-family: var(--font-primary);
+  background-color: var(--navy-dark);
+  color: var(--white);
+  min-height: 100vh;
+  line-height: 1.6;
+}
+
+a {
+  color: var(--gold);
+  text-decoration: none;
+}
+
+a:hover {
+  color: var(--tan);
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* ========================================
+   NAVIGATION
+   ======================================== */
+.nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  height: var(--nav-height);
+  background-color: var(--navy-dark);
+  border-bottom: 2px solid var(--gold);
+  display: flex;
+  align-items: center;
+  padding: 0 1.5rem;
+}
+
+.nav-inner {
+  width: 100%;
+  max-width: 1280px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.nav-logo {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  text-decoration: none;
+  flex-shrink: 0;
+}
+
+.nav-logo-img {
+  height: 32px;
+  width: auto;
+}
+
+.nav-logo-sub {
+  font-size: 0.65rem;
+  color: var(--tan);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  display: block;
+  line-height: 1;
+  margin-top: 2px;
+}
+
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  list-style: none;
+}
+
+.nav-links a {
+  color: var(--off-white);
+  font-size: 0.85rem;
+  font-weight: 500;
+  padding: 0.4rem 0.75rem;
+  border-radius: 4px;
+  transition: color 0.15s, background 0.15s;
+  white-space: nowrap;
+  letter-spacing: 0.02em;
+}
+
+.nav-links a:hover {
+  color: var(--gold);
+  background: rgba(201, 158, 80, 0.08);
+}
+
+.nav-links a.active {
+  color: var(--gold);
+}
+
+/* Mobile nav toggle */
+.nav-toggle {
+  display: none;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.5rem;
+  color: var(--off-white);
+  flex-direction: column;
+  gap: 5px;
+}
+
+.nav-toggle span {
+  display: block;
+  width: 22px;
+  height: 2px;
+  background: currentColor;
+  transition: transform 0.2s, opacity 0.2s;
+}
+
+/* ========================================
+   PAGE LAYOUT
+   ======================================== */
+.page-wrapper {
+  padding-top: var(--nav-height);
+  min-height: 100vh;
+}
+
+.container {
+  width: 100%;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+}
+
+/* ========================================
+   HERO / PAGE HEADER
+   ======================================== */
+.page-header {
+  padding: 3rem 0 2rem;
+  border-bottom: 1px solid rgba(201, 158, 80, 0.15);
+  margin-bottom: 2.5rem;
+}
+
+.page-header h1 {
+  font-family: var(--font-display);
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--white);
+  letter-spacing: -0.02em;
+}
+
+.page-header p {
+  color: var(--off-white);
+  margin-top: 0.5rem;
+  font-size: 1rem;
+}
+
+/* ========================================
+   CARDS
+   ======================================== */
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1.25rem;
+  padding: 0;
+}
+
+.card {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 8px;
+  padding: 1.5rem;
+  text-decoration: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  transition: border-color 0.2s, transform 0.2s, box-shadow 0.2s;
+  position: relative;
+  overflow: hidden;
+}
+
+.card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--gold), transparent);
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.card:hover {
+  border-color: var(--card-border-hover);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(201, 158, 80, 0.1);
+}
+
+.card:hover::before {
+  opacity: 1;
+}
+
+.card-icon {
+  font-size: 2rem;
+  line-height: 1;
+}
+
+.card-title {
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--white);
+  letter-spacing: -0.01em;
+}
+
+.card-desc {
+  color: var(--off-white);
+  font-size: 0.875rem;
+  line-height: 1.5;
+  flex: 1;
+}
+
+.card-arrow {
+  color: var(--gold);
+  font-size: 1rem;
+  align-self: flex-end;
+  opacity: 0;
+  transform: translateX(-4px);
+  transition: opacity 0.2s, transform 0.2s;
+}
+
+.card:hover .card-arrow {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.card-tag {
+  display: inline-block;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  background: rgba(255,255,255,0.05);
+  padding: 2px 8px;
+  border-radius: 99px;
+  align-self: flex-start;
+}
+
+.card-tag.external {
+  color: var(--slate);
+}
+
+.card-links {
+  display: flex;
+  gap: 1rem;
+  margin-top: auto;
+}
+
+.card-links a {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--gold);
+  text-decoration: none;
+  opacity: 0.7;
+  transition: opacity 0.2s;
+}
+
+.card-links a:hover {
+  opacity: 1;
+}
+
+/* ========================================
+   EMBED LAYOUT (iframe pages — nav stays standard 64px)
+   ======================================== */
+
+/* ========================================
+   IFRAME EMBEDS
+   ======================================== */
+.embed-page {
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - var(--nav-height));
+  margin-top: var(--nav-height);
+}
+
+.embed-header {
+  padding: 0.3rem 1.5rem;
+  background: var(--navy);
+  border-bottom: 1px solid rgba(201, 158, 80, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-shrink: 0;
+  min-height: 30px;
+}
+
+.embed-header a {
+  font-size: 0.72rem;
+  color: var(--muted);
+  letter-spacing: 0.02em;
+}
+
+.embed-header a:hover {
+  color: var(--gold);
+}
+
+.embed-frame {
+  flex: 1;
+  border: none;
+  width: 100%;
+  background: var(--navy-dark);
+}
+
+/* ========================================
+   CONTENT PAGES (Handbook, Org, SOPs)
+   ======================================== */
+.content-page {
+  padding: 2.5rem 0 4rem;
+  max-width: 860px;
+  margin: 0 auto;
+}
+
+.content-page h1 {
+  font-family: var(--font-display);
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--white);
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid var(--gold);
+}
+
+.content-page h2 {
+  font-family: var(--font-display);
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: var(--tan);
+  margin-top: 2.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.content-page h3 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--off-white);
+  margin-top: 1.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.content-page p {
+  color: var(--off-white);
+  margin-bottom: 1rem;
+  line-height: 1.75;
+}
+
+.content-page ul, .content-page ol {
+  color: var(--off-white);
+  margin-bottom: 1rem;
+  padding-left: 1.5rem;
+}
+
+.content-page li {
+  margin-bottom: 0.4rem;
+  line-height: 1.65;
+}
+
+.content-page strong {
+  color: var(--white);
+  font-weight: 600;
+}
+
+.content-page a {
+  color: var(--slate);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.content-page a:hover {
+  color: var(--tan);
+}
+
+.content-page blockquote {
+  border-left: 3px solid var(--gold);
+  padding: 0.75rem 1rem;
+  background: rgba(201, 158, 80, 0.06);
+  border-radius: 0 4px 4px 0;
+  margin: 1.5rem 0;
+}
+
+.content-page blockquote p {
+  margin: 0;
+  font-style: italic;
+  color: var(--tan);
+}
+
+.content-page table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1.5rem 0;
+  font-size: 0.875rem;
+}
+
+.content-page th {
+  background: rgba(255,255,255,0.03);
+  color: var(--tan);
+  font-weight: 600;
+  text-align: left;
+  padding: 0.6rem 0.75rem;
+  border-bottom: 2px solid var(--gold);
+}
+
+.content-page td {
+  padding: 0.6rem 0.75rem;
+  color: var(--off-white);
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+
+.content-page tr:hover td {
+  background: rgba(255,255,255,0.02);
+}
+
+.content-page code {
+  background: rgba(255,255,255,0.08);
+  padding: 0.15em 0.4em;
+  border-radius: 3px;
+  font-size: 0.875em;
+  font-family: 'Courier New', monospace;
+  color: var(--tan);
+}
+
+.content-page pre {
+  background: rgba(0,0,0,0.3);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 6px;
+  padding: 1rem 1.25rem;
+  overflow-x: auto;
+  margin: 1.5rem 0;
+}
+
+.content-page pre code {
+  background: none;
+  padding: 0;
+  font-size: 0.85rem;
+}
+
+.content-page input[type="checkbox"] {
+  accent-color: var(--gold);
+  margin-right: 0.4rem;
+}
+
+/* ========================================
+   ROLE-BASED VISIBILITY
+   ======================================== */
+[data-access="leadership"] { display: none !important; }
+html.role-leadership [data-access="leadership"] { display: flex !important; }
+html.role-leadership .nav-links [data-access="leadership"] { display: list-item !important; }
+html.role-leadership .nav-links.open [data-access="leadership"] { display: flex !important; }
+
+[data-access="jeb"] { display: none !important; }
+html.role-jeb [data-access="jeb"] { display: flex !important; }
+html.role-jeb .nav-links [data-access="jeb"] { display: list-item !important; }
+html.role-jeb .nav-links.open [data-access="jeb"] { display: flex !important; }
+
+[data-access="admin"] { display: none !important; }
+html.role-admin [data-access="admin"] { display: flex !important; }
+html.role-admin .nav-links [data-access="admin"] { display: list-item !important; }
+html.role-admin .nav-links.open [data-access="admin"] { display: flex !important; }
+
+/* ========================================
+   FOOTER
+   ======================================== */
+.site-footer {
+  padding: 2rem 1.5rem;
+  border-top: 1px solid rgba(255,255,255,0.06);
+  text-align: center;
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+/* ========================================
+   RESPONSIVE
+   ======================================== */
+@media (max-width: 768px) {
+  .nav-links {
+    display: none;
+    position: fixed;
+    top: var(--nav-height);
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: var(--navy-dark);
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0;
+    padding: 1rem;
+    border-top: 1px solid rgba(201, 158, 80, 0.15);
+    overflow-y: auto;
+  }
+
+  .nav-links.open {
+    display: flex;
+  }
+
+  .nav-links a {
+    padding: 0.75rem 1rem;
+    font-size: 1rem;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+  }
+
+  .nav-toggle {
+    display: flex;
+  }
+
+  .card-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .page-header h1 {
+    font-size: 1.5rem;
+  }
+
+  .content-page h1 {
+    font-size: 1.5rem;
+  }
+
+  .content-page {
+    padding: 1.5rem 1rem 3rem;
+  }
+}
+
+@media (max-width: 375px) {
+  .nav {
+    padding: 0 1rem;
+  }
+
+  .container {
+    padding: 0 1rem;
+  }
+}
+
+/* ========================================
+   SHARED COMPONENTS
+   Extracted from page-scoped styles so they
+   work site-wide (style guide, scorecards, etc.)
+   ======================================== */
+
+/* ── Badges ─────────────────────────────── */
+.sc-badge {
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--gold);
+  background: rgba(201,158,80,0.12);
+  border: 1px solid rgba(201,158,80,0.25);
+  border-radius: 4px;
+  padding: 3px 8px;
+}
+
+.quality-badge {
+  font-size: 0.62rem;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 10px;
+  white-space: nowrap;
+}
+.quality-badge.green  { background: rgba(74,222,128,0.12); color: #4ade80; border: 1px solid rgba(74,222,128,0.25); }
+.quality-badge.yellow { background: rgba(251,191,36,0.12);  color: #fbbf24; border: 1px solid rgba(251,191,36,0.25); }
+.quality-badge.red    { background: rgba(248,113,113,0.12); color: #f87171; border: 1px solid rgba(248,113,113,0.25); }
+
+.source-flag {
+  font-size: 0.65rem;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-weight: 600;
+}
+
+.today-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.8rem;
+  color: var(--muted);
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  padding: 0.35rem 0.75rem;
+  border-radius: 99px;
+  white-space: nowrap;
+}
+
+.search-badge {
+  display: inline-block;
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 1px 6px;
+  border-radius: 99px;
+}
+.search-badge-job    { color: var(--slate); background: rgba(127,168,201,0.15); }
+.search-badge-person { color: var(--tan);   background: rgba(235,202,156,0.12); }
+.search-badge-folder { color: var(--gold);  background: rgba(201,158,80,0.12); }
+.search-badge-status { color: var(--off-white); background: rgba(255,255,255,0.07); }
+.search-badge-survey { color: #5fb97e;      background: rgba(75,160,100,0.15); }
+
+/* ── Tab bar ────────────────────────────── */
+.sc-tabs {
+  display: flex;
+  gap: 0;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  background: rgba(255,255,255,0.02);
+  padding: 0 1.5rem;
+  overflow-x: auto;
+}
+
+.sc-tab {
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--muted);
+  font-family: var(--font-primary);
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 0.85rem 1.25rem;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: color 0.15s, border-color 0.15s;
+  margin-bottom: -1px;
+}
+.sc-tab:hover { color: var(--off-white); }
+.sc-tab.active {
+  color: var(--gold);
+  border-bottom-color: var(--gold);
+}
+
+/* ── Section headers ────────────────────── */
+.sc-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.sc-title-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.section-title {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  margin-bottom: 0.75rem;
+}
+
+.section-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+/* ── Period toggle ──────────────────────── */
+.period-toggle {
+  display: flex;
+  gap: 3px;
+  background: rgba(255,255,255,0.04);
+  border-radius: 8px;
+  padding: 3px;
+}
+
+.pt-btn {
+  background: none;
+  border: none;
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 6px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-family: var(--font-primary);
+}
+.pt-btn:hover { color: var(--off-white); }
+.pt-btn.active {
+  background: var(--gold);
+  color: var(--navy);
+}
+
+/* ── Metric filter pills ────────────────── */
+.metric-filter {
+  display: flex;
+  gap: 4px;
+}
+
+.mf-btn {
+  background: none;
+  border: 1px solid rgba(255,255,255,0.1);
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 4px 12px;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-family: var(--font-primary);
+}
+.mf-btn:hover { border-color: rgba(201,158,80,0.3); color: var(--off-white); }
+.mf-btn.active { background: rgba(201,158,80,0.15); border-color: rgba(201,158,80,0.4); color: var(--gold); }
+
+/* ── KPI cards ──────────────────────────── */
+.sc-cards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-bottom: 1.25rem;
+}
+
+.metric-card {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 12px;
+  padding: 1.25rem 1.25rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  position: relative;
+  overflow: hidden;
+  transition: border-color 0.2s;
+}
+.metric-card:hover { border-color: rgba(201,158,80,0.2); }
+
+.card-accent {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: var(--gold);
+  opacity: 0.7;
+}
+
+.metric-icon { font-size: 1.4rem; line-height: 1; }
+
+.metric-label {
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  margin-bottom: 0.4rem;
+}
+
+.metric-count {
+  font-family: var(--font-display);
+  font-size: 2.75rem;
+  font-weight: 700;
+  color: var(--white);
+  line-height: 1;
+  letter-spacing: -0.03em;
+}
+
+.metric-dollars {
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--gold);
+  margin-top: 0.25rem;
+}
+
+.metric-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+  border-top: 1px solid rgba(255,255,255,0.05);
+  padding-top: 0.5rem;
+}
+
+.metric-range {
+  font-size: 0.68rem;
+  color: var(--muted);
+}
+
+/* ── Tables ─────────────────────────────── */
+.table-wrap { overflow-x: auto; }
+
+.sc-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8rem;
+}
+
+.sc-table th {
+  text-align: left;
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--muted);
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  white-space: nowrap;
+}
+
+.sc-table td {
+  padding: 0.55rem 0.75rem;
+  color: var(--off-white);
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  vertical-align: middle;
+}
+
+.sc-table tr:last-child td { border-bottom: none; }
+.sc-table tr:hover td { background: rgba(255,255,255,0.02); }
+
+.num-col { text-align: right; }
+.sc-table th.num-col { text-align: right; }
+.sc-table td.num-col { text-align: right; font-variant-numeric: tabular-nums; }
+
+.link-col { text-align: center; }
+.sc-table th.link-col { text-align: center; }
+.sc-table td.link-col { text-align: center; }
+
+/* ── Charts ─────────────────────────────── */
+.chart-section {
+  background: rgba(255,255,255,0.02);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 12px;
+  padding: 1.25rem 0 0;
+  margin-bottom: 1.5rem;
+}
+
+.chart-section .chart-header {
+  padding: 0 1.25rem;
+}
+
+.chart-section canvas,
+.chart-section svg,
+.chart-section .sc-chart {
+  display: block;
+  width: 100%;
+}
+
+.chart-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.chart-title {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+}
+
+.chart-legend {
+  display: flex;
+  gap: 1rem;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.72rem;
+  color: var(--muted);
+  cursor: pointer;
+  user-select: none;
+}
+
+.legend-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* ── Pagination ─────────────────────────── */
+.page-btn {
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.1);
+  color: var(--off-white);
+  font-family: var(--font-primary);
+  font-size: 0.78rem;
+  padding: 6px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.page-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+.page-btn:not(:disabled):hover { background: rgba(201,158,80,0.1); border-color: rgba(201,158,80,0.3); }
+
+/* ── Form inputs ────────────────────────── */
+.form-input,
+.form-select,
+.form-textarea {
+  display: block;
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 6px;
+  color: var(--off-white);
+  font-family: var(--font-primary);
+  font-size: 0.875rem;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  outline: none;
+}
+.form-input::placeholder,
+.form-textarea::placeholder { color: var(--muted); }
+.form-input:focus,
+.form-select:focus,
+.form-textarea:focus {
+  border-color: var(--gold);
+  box-shadow: 0 0 0 2px rgba(201,158,80,0.1);
+}
+.form-textarea { resize: vertical; min-height: 5rem; }
+
+.form-label {
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  margin-bottom: 0.4rem;
+}
+
+/* Select — override native dropdown for dark theme */
+.form-select {
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-color: rgba(255,255,255,0.04);
+  background-image: url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%238893A0' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  padding-right: 2.25rem;
+}
+
+/* Style dropdown options for dark theme (Firefox/Chrome) */
+.form-select option {
+  background: var(--navy-mid, #1e2d4a);
+  color: var(--off-white, #B0B8C4);
+  padding: 0.5rem;
+}
+
+/* ── Search input ───────────────────────── */
+.search-box {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.search-icon {
+  position: absolute;
+  left: 1rem;
+  color: var(--muted);
+  pointer-events: none;
+  flex-shrink: 0;
+}
+
+.search-input {
+  width: 100%;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(201,158,80,0.25);
+  border-radius: 6px;
+  padding: 0.65rem 2.75rem;
+  font-family: var(--font-primary);
+  font-size: 0.875rem;
+  color: var(--white);
+  outline: none;
+  transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
+}
+.search-input::placeholder { color: var(--muted); }
+.search-input:focus {
+  border-color: rgba(201,158,80,0.6);
+  background: rgba(255,255,255,0.09);
+  box-shadow: 0 0 0 3px rgba(201,158,80,0.1);
+}
+
+/* ── Shared component responsive ────────── */
+@media (max-width: 640px) {
+  .sc-cards { grid-template-columns: 1fr; }
+  .metric-count { font-size: 2.25rem; }
+  .sc-header { flex-direction: column; align-items: flex-start; }
+  .period-toggle { width: 100%; justify-content: stretch; }
+  .pt-btn { flex: 1; padding: 6px 8px; }
+  .metric-filter { flex-wrap: wrap; }
+  .section-header-row { flex-direction: column; align-items: flex-start; }
+}
+
+/* ========================================
+   THEME TOGGLE (in nav)
+   ======================================== */
+.nav-theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: transparent;
+  border: 1px solid rgba(201,158,80,0.25);
+  border-radius: 6px;
+  color: var(--off-white);
+  cursor: pointer;
+  padding: 0;
+  flex-shrink: 0;
+  transition: color 0.15s, border-color 0.15s, background 0.15s;
+}
+.nav-theme-toggle:hover {
+  color: var(--gold);
+  border-color: rgba(201,158,80,0.55);
+  background: rgba(201,158,80,0.08);
+}
+.nav-theme-toggle svg { display: block; }
+/* Show the icon that matches the theme we'd switch TO */
+.nav-theme-toggle .icon-sun { display: none; }
+.nav-theme-toggle .icon-moon { display: block; }
+html[data-theme="light"] .nav-theme-toggle .icon-sun { display: block; }
+html[data-theme="light"] .nav-theme-toggle .icon-moon { display: none; }
+
+/* ========================================
+   LIGHT-MODE SPOT FIXES for global components
+   These selectors use rgba(255,255,255,X) overlays designed for dark.
+   On light bg we want darker overlays for the same visual weight.
+   ======================================== */
+html[data-theme="light"] .card-tag {
+  background: rgba(25, 34, 63, 0.06);
+}
+html[data-theme="light"] .nav-links a:hover {
+  background: rgba(201, 158, 80, 0.12);
+}
+html[data-theme="light"] .card:hover {
+  box-shadow: var(--shadow-md), 0 0 0 1px rgba(201, 158, 80, 0.15);
+}
+html[data-theme="light"] .content-page th {
+  background: rgba(25, 34, 63, 0.04);
+}
+html[data-theme="light"] .content-page td {
+  border-bottom-color: rgba(25, 34, 63, 0.07);
+}
+html[data-theme="light"] .content-page tr:hover td {
+  background: rgba(201, 158, 80, 0.05);
+}
+html[data-theme="light"] .content-page code {
+  background: rgba(25, 34, 63, 0.07);
+  color: var(--gold-hover);
+}
+html[data-theme="light"] .content-page pre {
+  background: var(--bg-sunken);
+  border-color: var(--border);
+}
+html[data-theme="light"] .site-footer {
+  border-top-color: rgba(25, 34, 63, 0.08);
+}
+html[data-theme="light"] .sc-table th {
+  border-bottom-color: rgba(25, 34, 63, 0.1);
+}
+html[data-theme="light"] .sc-table td {
+  border-bottom-color: rgba(25, 34, 63, 0.06);
+}
+html[data-theme="light"] .sc-table tr:hover td {
+  background: rgba(201, 158, 80, 0.06);
+}
+html[data-theme="light"] .sc-tabs {
+  background: rgba(25, 34, 63, 0.03);
+  border-bottom-color: rgba(25, 34, 63, 0.1);
+}
+html[data-theme="light"] .metric-card {
+  background: var(--bg-elevated);
+  border-color: var(--border);
+}
+html[data-theme="light"] .chart-section {
+  background: var(--bg-elevated);
+  border-color: var(--border);
+}
+html[data-theme="light"] .form-input,
+html[data-theme="light"] .form-select,
+html[data-theme="light"] .form-textarea {
+  background: #fdfbf6;
+  border-color: #e2d8c2;
+  color: var(--text);
+  box-shadow: inset 0 1px 2px rgba(74, 55, 16, 0.03);
+}
+html[data-theme="light"] .form-input:hover,
+html[data-theme="light"] .form-select:hover,
+html[data-theme="light"] .form-textarea:hover {
+  border-color: #d4c6a8;
+}
+html[data-theme="light"] .form-input:focus,
+html[data-theme="light"] .form-select:focus,
+html[data-theme="light"] .form-textarea:focus {
+  background: #ffffff;
+  border-color: var(--gold);
+  box-shadow: 0 0 0 3px rgba(201, 158, 80, 0.15);
+}
+html[data-theme="light"] .form-input::placeholder,
+html[data-theme="light"] .form-textarea::placeholder {
+  color: #a89f8a;
+}
+html[data-theme="light"] .form-select {
+  background-color: #fdfbf6;
+  background-image: url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%238a6f37' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+}
+html[data-theme="light"] .search-input {
+  background: #fdfbf6;
+  border-color: #e2d8c2;
+  color: var(--text);
+  box-shadow: inset 0 1px 2px rgba(74, 55, 16, 0.03);
+}
+html[data-theme="light"] .search-input:focus {
+  background: #ffffff;
+  border-color: var(--gold);
+  box-shadow: 0 0 0 3px rgba(201, 158, 80, 0.15);
+}
+html[data-theme="light"] .search-input::placeholder {
+  color: #a89f8a;
+}
+html[data-theme="light"] .page-btn {
+  background: #fdfbf6;
+  border-color: #e2d8c2;
+  color: var(--text);
+}
+html[data-theme="light"] .page-btn:not(:disabled):hover {
+  background: rgba(201,158,80,0.12);
+  border-color: rgba(201,158,80,0.45);
+  color: var(--gold-hover);
+}
+html[data-theme="light"] .today-badge {
+  background: rgba(201, 158, 80, 0.08);
+  border-color: rgba(201, 158, 80, 0.2);
+  color: var(--gold-hover);
+}
+html[data-theme="light"] .period-toggle {
+  background: rgba(74, 55, 16, 0.05);
+  border-color: rgba(74, 55, 16, 0.08);
+}
+html[data-theme="light"] .pt-btn.active {
+  color: var(--bg-elevated);
+}
+html[data-theme="light"] .mf-btn {
+  border-color: rgba(74, 55, 16, 0.1);
+  color: var(--text);
+}
+html[data-theme="light"] .mf-btn:hover {
+  background: rgba(201, 158, 80, 0.1);
+  border-color: rgba(201, 158, 80, 0.4);
+  color: var(--gold-hover);
+}
+html[data-theme="light"] label,
+html[data-theme="light"] .form-label {
+  color: var(--text);
+}
+html[data-theme="light"] .card {
+  box-shadow: var(--shadow-sm);
+}
+html[data-theme="light"] .card:hover {
+  box-shadow: 0 8px 24px rgba(74, 55, 16, 0.1), 0 0 0 1px rgba(201, 158, 80, 0.15);
+}
+html[data-theme="light"] .card-title {
+  color: var(--text);
+}
+html[data-theme="light"] .card-desc {
+  color: var(--text-muted);
+}
+html[data-theme="light"] .card-tag {
+  background: rgba(74, 55, 16, 0.06);
+  color: var(--text-muted);
+}
+html[data-theme="light"] .card-tag.external {
+  color: #5478a3;
+  background: rgba(127, 168, 201, 0.12);
+}
+html[data-theme="light"] .card-links a {
+  color: var(--gold-hover);
+}
+html[data-theme="light"] .nav {
+  border-bottom-color: var(--gold);
+  box-shadow: 0 1px 3px rgba(74, 55, 16, 0.04);
+}
+html[data-theme="light"] .nav-links a {
+  color: var(--text-muted);
+}
+html[data-theme="light"] .nav-links a:hover {
+  color: var(--gold-hover);
+  background: rgba(201, 158, 80, 0.1);
+}
+html[data-theme="light"] .nav-links a.active {
+  color: var(--gold-hover);
+}
+html[data-theme="light"] .nav-logo-sub {
+  color: var(--gold-hover);
+}
+html[data-theme="light"] body {
+  background-color: var(--bg);
+  color: var(--text);
+}
+html[data-theme="light"] .nav {
+  background-color: var(--bg-elevated);
+}
+html[data-theme="light"] .embed-frame {
+  background: var(--bg);
+}
+@media (max-width: 768px) {
+  html[data-theme="light"] .nav-links {
+    background: var(--bg-elevated);
+    border-top-color: rgba(25, 34, 63, 0.1);
+  }
+}
+
+/* ========================================
+   DESKTOP NAV DROPDOWN — light theme
+   The dark-default dropdown uses `background: var(--navy)` which stays
+   navy in light mode. Rebind on paper bg.
+   ======================================== */
+html[data-theme="light"] .nav-cat-btn {
+  color: var(--text-muted);
+}
+html[data-theme="light"] .nav-cat-btn:hover,
+html[data-theme="light"] .nav-cat-btn[aria-expanded="true"] {
+  color: var(--gold-hover);
+  background: rgba(201, 158, 80, 0.1);
+}
+html[data-theme="light"] .nav-cat-btn.active {
+  color: var(--gold-hover);
+}
+html[data-theme="light"] .nav-dropdown {
+  background: #ffffff;
+  border-color: #e2d8c2;
+  box-shadow: 0 16px 40px rgba(74, 55, 16, 0.18), 0 2px 6px rgba(74, 55, 16, 0.08);
+}
+html[data-theme="light"] .nav-dropdown-item {
+  color: var(--text-muted);
+}
+html[data-theme="light"] .nav-dropdown-item:hover {
+  background: rgba(201, 158, 80, 0.12);
+  color: var(--gold-hover);
+}
+html[data-theme="light"] .nav-dropdown-item.active {
+  color: var(--gold-hover);
+  background: rgba(201, 158, 80, 0.1);
+}
+html[data-theme="light"] .nav-manager-link {
+  color: var(--text-subtle);
+}
+html[data-theme="light"] .nav-manager-link:hover {
+  color: var(--gold-hover);
+  background: rgba(201, 158, 80, 0.1);
+}
+html[data-theme="light"] .nav-logout-btn {
+  color: var(--text-subtle);
+}
+html[data-theme="light"] .nav-logout-btn:hover {
+  color: #c25151;
+  background: rgba(194, 81, 81, 0.08);
+}
+html[data-theme="light"] .nav-refresh-btn {
+  color: var(--text-subtle);
+}
+html[data-theme="light"] .nav-refresh-btn:hover {
+  color: var(--gold-hover);
+  background: rgba(201, 158, 80, 0.1);
+}
+
+/* ========================================
+   SHARED DASHBOARD WIDGETS — light theme overrides
+   These dashboards inject their CSS at runtime from public/shared/*.js
+   with hardcoded white text and rgba(255,255,255,X) overlays designed
+   for dark navy bg. On the light paper bg we need darker overlays,
+   navy text, and visible borders.
+
+   Class prefixes targeted:
+     .sd-*      → sales-dashboard.js
+     .ja2-*     → job-analytics-dashboard.js
+     .di-*      → data-integrity-dashboard.js
+     .jd-*      → jobs-detail-dashboard.js
+     .pt-*      → pipeline-tracker.js
+     .wjc-*     → job-costing-dashboard.js
+     .est-weekly-* → estimates-weekly.js
+   ======================================== */
+
+/* Sections, panels, cards — flat paper bg + visible sandy border */
+html[data-theme="light"] .sd-section,
+html[data-theme="light"] .ja2-section,
+html[data-theme="light"] .di-section,
+html[data-theme="light"] .jd-section,
+html[data-theme="light"] .pt-section,
+html[data-theme="light"] .wjc-section,
+html[data-theme="light"] .est-weekly-section,
+html[data-theme="light"] .sd-kpi,
+html[data-theme="light"] .ja2-kpi,
+html[data-theme="light"] .sd-yoy-col,
+html[data-theme="light"] .sd-forecast-item,
+html[data-theme="light"] .sd-aging-block,
+html[data-theme="light"] .sd-accept-block,
+html[data-theme="light"] .sd-speed-row,
+html[data-theme="light"] .ja2-dq-banner {
+  background: #ffffff !important;
+  border-color: #e2d8c2 !important;
+  box-shadow: 0 1px 2px rgba(74, 55, 16, 0.05);
+}
+html[data-theme="light"] .sd-section,
+html[data-theme="light"] .ja2-section,
+html[data-theme="light"] .di-section,
+html[data-theme="light"] .jd-section,
+html[data-theme="light"] .pt-section,
+html[data-theme="light"] .wjc-section {
+  border: 1px solid #e2d8c2 !important;
+}
+
+/* Big metric numbers + headings — navy text instead of white */
+html[data-theme="light"] .sd-kpi-value,
+html[data-theme="light"] .ja2-kpi-val,
+html[data-theme="light"] .sd-yoy-title,
+html[data-theme="light"] .sd-forecast-value,
+html[data-theme="light"] .sd-table .gold,
+html[data-theme="light"] .sd-table strong,
+html[data-theme="light"] .sd-speed-stat strong,
+html[data-theme="light"] .sd-tier-val strong,
+html[data-theme="light"] .sd-insight strong {
+  color: #19223F !important;
+}
+
+/* Section titles already gold — keep, but darken slightly for contrast */
+html[data-theme="light"] .sd-section-title,
+html[data-theme="light"] .ja2-section-title,
+html[data-theme="light"] .di-section-title,
+html[data-theme="light"] .jd-section-title,
+html[data-theme="light"] .pt-section-title,
+html[data-theme="light"] .wjc-section-title,
+html[data-theme="light"] .sd-speed-label,
+html[data-theme="light"] .ja2-kpi-val {
+  color: #8a6f37 !important;
+}
+
+/* Muted labels — darker tan-brown for AA contrast on paper */
+html[data-theme="light"] .sd-kpi-label,
+html[data-theme="light"] .sd-kpi-sub,
+html[data-theme="light"] .sd-speed-stat,
+html[data-theme="light"] .sd-tier-row,
+html[data-theme="light"] .sd-accept-label,
+html[data-theme="light"] .sd-accept-count,
+html[data-theme="light"] .sd-aging-label,
+html[data-theme="light"] .sd-aging-dollars,
+html[data-theme="light"] .sd-forecast-label,
+html[data-theme="light"] .sd-forecast-sub,
+html[data-theme="light"] .ja2-kpi-label,
+html[data-theme="light"] .ja2-kpi-sub,
+html[data-theme="light"] .ja2-bar-stats,
+html[data-theme="light"] .ja2-pie-legend-item,
+html[data-theme="light"] .ja2-dist-label,
+html[data-theme="light"] .ja2-note,
+html[data-theme="light"] .sd-table .dim {
+  color: #6b6452 !important;
+}
+
+/* Bar text "$X" — overlay text on color bars should stay white for contrast */
+html[data-theme="light"] .ja2-bar,
+html[data-theme="light"] .sd-speed-bar-text {
+  color: #ffffff !important;
+}
+
+/* Bar labels (left of bar) — readable on paper */
+html[data-theme="light"] .ja2-bar-label {
+  color: #19223F !important;
+}
+
+/* Tables inside dashboards */
+html[data-theme="light"] .sd-table th,
+html[data-theme="light"] .ja2-fin-table th {
+  color: #6b6452 !important;
+  border-bottom-color: rgba(25, 34, 63, 0.12) !important;
+}
+html[data-theme="light"] .sd-table td,
+html[data-theme="light"] .ja2-fin-table td {
+  color: #19223F !important;
+  border-bottom-color: rgba(25, 34, 63, 0.06) !important;
+}
+html[data-theme="light"] .sd-table .this-month {
+  background: rgba(201, 158, 80, 0.1) !important;
+}
+html[data-theme="light"] .sd-table .yr-sep td {
+  border-top-color: rgba(201, 158, 80, 0.45) !important;
+}
+
+/* Small bg overlays inside cards (subtle striping) */
+html[data-theme="light"] .sd-speed-row,
+html[data-theme="light"] .sd-aging-block,
+html[data-theme="light"] .sd-accept-block,
+html[data-theme="light"] .sd-yoy-col {
+  background: #fdfbf6 !important;
+  border-color: #e2d8c2 !important;
+}
+html[data-theme="light"] .sd-speed-bar-wrap {
+  background: rgba(25, 34, 63, 0.08) !important;
+}
+
+/* Insight callout */
+html[data-theme="light"] .sd-insight {
+  background: rgba(201, 158, 80, 0.1) !important;
+  border-color: rgba(201, 158, 80, 0.35) !important;
+  color: #8a6f37 !important;
+}
+
+/* Row hover */
+html[data-theme="light"] .ja2-svc-row:hover,
+html[data-theme="light"] .ja2-pipe-row:hover {
+  background: rgba(201, 158, 80, 0.08) !important;
+}
+
+/* Bar row borders */
+html[data-theme="light"] .ja2-bar-row {
+  border-bottom-color: rgba(25, 34, 63, 0.08) !important;
+}
+
+/* Spinner ring on light bg */
+html[data-theme="light"] .ja2-spinner,
+html[data-theme="light"] .sd-spinner,
+html[data-theme="light"] .di-spinner,
+html[data-theme="light"] .jd-spinner,
+html[data-theme="light"] .pt-spinner {
+  border-color: rgba(74, 55, 16, 0.12) !important;
+  border-top-color: var(--gold) !important;
+}
+
+/* Loading/error text */
+html[data-theme="light"] .ja2-loading,
+html[data-theme="light"] .sd-loading,
+html[data-theme="light"] .di-loading,
+html[data-theme="light"] .jd-loading,
+html[data-theme="light"] .pt-loading {
+  color: #6b6452 !important;
+}
+
+/* Targeted overrides for any remaining bare-white text inside dashboard sections */
+html[data-theme="light"] .sd-section [style*="color:#fff"],
+html[data-theme="light"] .ja2-section [style*="color:#fff"],
+html[data-theme="light"] .sd-table .green,
+html[data-theme="light"] .ja2-fin-table .green {
+  /* green stays green, but darker for paper contrast */
+}
+html[data-theme="light"] .sd-table .green,
+html[data-theme="light"] .ja2-fin-table .green,
+html[data-theme="light"] .ja2-dq-good,
+html[data-theme="light"] .sd-accept-pct {
+  color: #2c8861 !important;
+}
+html[data-theme="light"] .sd-table .red,
+html[data-theme="light"] .ja2-fin-table .red,
+html[data-theme="light"] .ja2-dq-bad {
+  color: #c25151 !important;
+}
+html[data-theme="light"] .ja2-dq-warn {
+  color: #b8842a !important;
+}
+
+/* Estimates-this-week cell borders + card chrome (estimates-weekly.js)
+   The runtime-injected styles use rgba(255,255,255,0.02-0.05) which is
+   invisible on paper. Replace with visible sandy borders + paper bg. */
+html[data-theme="light"] .est-weekly-card {
+  background: #ffffff !important;
+  border-color: #e2d8c2 !important;
+}
+html[data-theme="light"] .est-weekly-day {
+  background: #fdfbf6 !important;
+  border: 1px solid #e2d8c2 !important;
+}
+html[data-theme="light"] .est-weekly-day.has-data {
+  border-color: #cdc2ad !important;
+}
+html[data-theme="light"] .est-weekly-day.is-today {
+  border-color: var(--gold) !important;
+  background: rgba(201,158,80,0.10) !important;
+}
+html[data-theme="light"] .est-weekly-nav {
+  background: #fdfbf6 !important;
+  border-color: #e2d8c2 !important;
+  color: #19223F !important;
+}
+html[data-theme="light"] .est-weekly-nav:hover {
+  background: rgba(201,158,80,0.12) !important;
+}
+html[data-theme="light"] .est-weekly-title { color: #19223F !important; }
+html[data-theme="light"] .est-weekly-date-range,
+html[data-theme="light"] .est-weekly-day-label,
+html[data-theme="light"] .est-weekly-day-date,
+html[data-theme="light"] .est-weekly-total-label,
+html[data-theme="light"] .est-weekly-progress-label { color: #6b6452 !important; }
+html[data-theme="light"] .est-weekly-day-sent,
+html[data-theme="light"] .est-weekly-sent-total { color: #8a6f37 !important; }
+html[data-theme="light"] .est-weekly-day-approved,
+html[data-theme="light"] .est-weekly-approved-total { color: #2c8861 !important; }
+html[data-theme="light"] .est-weekly-summary { border-top-color: #e2d8c2 !important; }
+html[data-theme="light"] .est-weekly-dual-track {
+  background: rgba(25,34,63,0.10) !important;
+}
+
+/* Sales: estimate target tracking — white bar on white bg fix */
+html[data-theme="light"] .sd-target-bar-wrap {
+  background: #fdfbf6 !important;
+  border-color: #e2d8c2 !important;
+}
+html[data-theme="light"] .sd-target-bar {
+  background: rgba(25,34,63,0.10) !important;
+}
+html[data-theme="light"] .sd-target-bar-fill {
+  background: var(--gold) !important;
+}
+
+/* Shiki dark-themed code blocks in SOPs (renders <pre class="astro-code github-dark"
+   style="background-color:#24292e;...">). The inline style has high precedence;
+   we override with !important to land paper-tone bg + navy text in light mode. */
+html[data-theme="light"] .astro-code,
+html[data-theme="light"] pre.astro-code {
+  background-color: #f0ead9 !important;
+  color: #19223F !important;
+  border: 1px solid #e2d8c2;
+}
+html[data-theme="light"] .astro-code code,
+html[data-theme="light"] .astro-code span { color: #19223F !important; }
+
+/* ========================================
+   Job Costing dashboard (.wjc-*) — light overrides
+   The dashboard injects translucent-white backgrounds (rgba(255,255,255,0.03))
+   which disappear on paper bg. Force solid paper cards + sandy borders.
+   ======================================== */
+html[data-theme="light"] .wjc-wrap { color: #19223F !important; }
+html[data-theme="light"] .wjc-toolbar {
+  background: #ffffff !important;
+  border: 1px solid #e2d8c2 !important;
+}
+/* .wjc-jobs-toolbar has no background in dark mode — keep it transparent in light too */
+html[data-theme="light"] .wjc-jobs-toolbar {
+  background: transparent !important;
+  border: none !important;
+  padding: 0 !important;
+}
+
+/* Filter dropdowns (<details>) — overlay the page instead of pushing content down.
+   Applies in both themes since it's a UX fix, not a theme fix. */
+.wjc-filter-group { position: relative; }
+.wjc-filter-group[open] > div {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  z-index: 50;
+  min-width: 200px;
+  max-width: 320px;
+  max-height: 60vh;
+  overflow-y: auto;
+  padding: 10px 12px;
+  background: var(--navy-mid, #1d2746);
+  border: 1px solid rgba(201, 158, 80, 0.3);
+  border-radius: 6px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+}
+html[data-theme="light"] .wjc-filter-group[open] > div {
+  background: #ffffff !important;
+  border: 1px solid #e2d8c2 !important;
+  box-shadow: 0 8px 24px rgba(74, 55, 16, 0.22) !important;
+}
+html[data-theme="light"] .wjc-input,
+html[data-theme="light"] .wjc-sort-select,
+html[data-theme="light"] .wjc-filter-select {
+  background: #fdfbf6 !important;
+  border: 1px solid #e2d8c2 !important;
+  color: #19223F !important;
+}
+html[data-theme="light"] .wjc-input::placeholder { color: #a89f8a; }
+html[data-theme="light"] .wjc-input:focus,
+html[data-theme="light"] .wjc-sort-select:focus,
+html[data-theme="light"] .wjc-filter-select:focus { border-color: var(--gold) !important; }
+html[data-theme="light"] .wjc-preset-btn {
+  background: #ffffff !important;
+  border: 1px solid #e2d8c2 !important;
+  color: #6b6452 !important;
+}
+html[data-theme="light"] .wjc-preset-btn:hover,
+html[data-theme="light"] .wjc-preset-btn.active {
+  background: rgba(201, 158, 80, 0.18) !important;
+  border-color: rgba(201, 158, 80, 0.45) !important;
+  color: #8a6f37 !important;
+}
+html[data-theme="light"] .wjc-cache-info { color: #a89f8a !important; }
+html[data-theme="light"] .wjc-date-sep { color: #6b6452 !important; }
+html[data-theme="light"] .wjc-sort-label { color: #6b6452 !important; }
+
+/* Stat cards (Revenue, Cost, Margin, Hours, Jobs) */
+html[data-theme="light"] .wjc-stat-card {
+  background: #ffffff !important;
+  border: 1px solid #e2d8c2 !important;
+  box-shadow: 0 1px 2px rgba(74, 55, 16, 0.05);
+}
+html[data-theme="light"] .wjc-stat-value { color: #8a6f37 !important; }
+html[data-theme="light"] .wjc-stat-label { color: #6b6452 !important; }
+
+/* Filter groups (left-side checkboxes) */
+html[data-theme="light"] .wjc-filter-group {
+  background: #ffffff !important;
+  border: 1px solid #e2d8c2 !important;
+}
+html[data-theme="light"] .wjc-filter-item { color: #19223F !important; }
+html[data-theme="light"] .wjc-filter-toggle-all { color: #8a6f37 !important; }
+html[data-theme="light"] .wjc-empty-filter { color: #a89f8a !important; }
+
+/* Tabs */
+html[data-theme="light"] .wjc-tab-nav { border-bottom: 1px solid #e2d8c2 !important; }
+html[data-theme="light"] .wjc-tab { color: #6b6452 !important; }
+html[data-theme="light"] .wjc-tab.active {
+  color: #8a6f37 !important;
+  border-bottom-color: var(--gold) !important;
+}
+html[data-theme="light"] .wjc-tab:hover:not(.active) {
+  color: #19223F !important;
+  background: rgba(25, 34, 63, 0.04) !important;
+}
+
+/* Job cards */
+html[data-theme="light"] .wjc-job-card-wrapper {
+  background: #ffffff !important;
+  border: 1px solid #e2d8c2 !important;
+  box-shadow: 0 1px 2px rgba(74, 55, 16, 0.05);
+}
+html[data-theme="light"] .wjc-job-card:hover { background: rgba(201, 158, 80, 0.08) !important; }
+html[data-theme="light"] .wjc-job-name { color: #19223F !important; }
+html[data-theme="light"] .wjc-metric-value { color: #19223F !important; }
+html[data-theme="light"] .wjc-metric-value.wjc-no-price { color: #a89f8a !important; }
+html[data-theme="light"] .wjc-metric-value.wjc-type-val { color: #6b6452 !important; }
+html[data-theme="light"] .wjc-metric-label { color: #6b6452 !important; }
+html[data-theme="light"] .wjc-person-bar-wrap { background: rgba(25, 34, 63, 0.08) !important; }
+
+/* Job detail (expanded panel) */
+html[data-theme="light"] .wjc-job-detail {
+  background: #fdfbf6 !important;
+  border-top: 1px solid #e2d8c2 !important;
+}
+html[data-theme="light"] .wjc-detail-section-title { color: #8a6f37 !important; }
+html[data-theme="light"] .wjc-detail-name { color: #19223F !important; }
+html[data-theme="light"] .wjc-detail-val { color: #6b6452 !important; }
+html[data-theme="light"] .wjc-detail-val-em { color: #8a6f37 !important; }
+html[data-theme="light"] .wjc-detail-hrs { color: #19223F !important; }
+
+/* Costable cards (summary tab) */
+html[data-theme="light"] .wjc-costable-card {
+  background: #ffffff !important;
+  border: 1px solid #e2d8c2 !important;
+}
+html[data-theme="light"] .wjc-costable-card-val { color: #8a6f37 !important; }
+html[data-theme="light"] .wjc-costable-card-sub { color: #6b6452 !important; }
+
+/* Person cards (people tab) */
+html[data-theme="light"] .wjc-person-card-wrapper {
+  background: #ffffff !important;
+  border: 1px solid #e2d8c2 !important;
+  box-shadow: 0 1px 2px rgba(74, 55, 16, 0.05);
+}
+html[data-theme="light"] .wjc-person-card-name { color: #19223F !important; }
+html[data-theme="light"] .wjc-person-card-sub { color: #6b6452 !important; }
+
+/* Chart sections */
+html[data-theme="light"] .wjc-chart-section {
+  background: #ffffff !important;
+  border: 1px solid #e2d8c2 !important;
+}
+html[data-theme="light"] .wjc-chart-title { color: #8a6f37 !important; }
+html[data-theme="light"] .wjc-chart-legend { color: #6b6452 !important; }
+
+/* Horizontal bar rows (top tables) */
+html[data-theme="light"] .wjc-h-bar-track { background: rgba(25, 34, 63, 0.08) !important; }
+html[data-theme="light"] .wjc-h-bar-label { color: #19223F !important; }
+html[data-theme="light"] .wjc-h-bar-val { color: #8a6f37 !important; }
+
+/* Empty/loading/error states */
+html[data-theme="light"] .wjc-empty-state,
+html[data-theme="light"] .wjc-loading-state { color: #6b6452 !important; }
+html[data-theme="light"] .wjc-spinner { border-color: rgba(25, 34, 63, 0.12) !important; border-top-color: var(--gold) !important; }
+
+/* Month chart axis labels */
+html[data-theme="light"] .wjc-month-label { color: #6b6452 !important; }

@@ -1,0 +1,13 @@
+{
+  "name": "Bedrock — LIDAR ground classification",
+  "short_name": "Bedrock",
+  "description": "Cloud-native drone lidar ground classification for heavy-vegetation tracts",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#19223F",
+  "theme_color": "#19223F",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}

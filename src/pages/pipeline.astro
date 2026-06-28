@@ -1,0 +1,145 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout title="Pipeline" active="pipeline">
+  <section class="section" style="padding-top:5rem;">
+    <div class="container">
+      <div class="section-eyebrow">Architecture</div>
+      <h2 class="section-title">PDAL → CSF / ML → COPC → R2 → CesiumJS. Same boxes, v0 through v4.</h2>
+      <p class="section-lede">
+        The shape of the pipeline doesn't change between v0 and the multi-tenant SaaS. We swap in components: CSF gets replaced by an ML model. Local upload gets replaced by resumable R2 multipart. The Cesium viewer gets a Potree power-user companion. The interfaces stay stable so each phase builds on the last.
+      </p>
+
+      <pre style="background:var(--card-bg);border:1px solid var(--card-border);border-radius:10px;padding:1.5rem;overflow-x:auto;font-size:0.78rem;color:var(--text-muted);line-height:1.5;font-family:'SF Mono','Menlo','Consolas',monospace;">
+                  ┌───────────────────────────────────┐
+                  │ lidar.weygand.com (CF Pages)      │
+                  │  - Upload UI (resumable, R2)      │
+                  │  - QC viewer (CesiumJS + Potree)  │
+                  └─────────────┬─────────────────────┘
+                                │
+                 ┌──────────────▼───────────────┐
+                 │  Cloudflare R2 (storage)      │
+                 │  /uploads/&lt;job&gt;/raw.laz       │
+                 │  /jobs/&lt;job&gt;/normalized.copc  │
+                 │  /jobs/&lt;job&gt;/classified.copc  │
+                 │  /jobs/&lt;job&gt;/dtm.tif          │
+                 │  /jobs/&lt;job&gt;/edits.delta      │
+                 └──────────────┬───────────────┘
+                                │
+                 ┌──────────────▼───────────────┐
+                 │  D1: jobs + planning_log      │
+                 └──────────────┬───────────────┘
+                                │
+             ┌──────────────────┼──────────────────┐
+             │                  │                  │
+  ┌──────────▼────────┐ ┌───────▼──────┐ ┌─────────▼──────┐
+  │ DO GPU droplet    │ │ Modal burst  │ │ DO CPU droplet │
+  │ (L40S, ML inf.)   │ │ (queue &gt; 2)  │ │ (PDAL, COPC,   │
+  │ → classified.copc │ │              │ │  DTM, contours)│
+  └───────────────────┘ └──────────────┘ └────────────────┘</pre>
+
+      <div class="section-eyebrow" style="margin-top:3rem;">Stages</div>
+      <h2 class="section-title">The seven stages, end-to-end.</h2>
+
+      <div class="timeline">
+        <div class="timeline-step">
+          <div class="timeline-num">1</div>
+          <div>
+            <h3>Ingest <span class="tag">CF Pages → R2</span></h3>
+            <p>Browser uploads <code>.las</code> / <code>.laz</code> directly to R2 via presigned multipart URLs. 10 GB chunks, resumable. Job row written to D1 with status <code>queued</code>. No file ever touches a Worker (well over the 100 MB Worker body limit).</p>
+          </div>
+        </div>
+        <div class="timeline-step">
+          <div class="timeline-num">2</div>
+          <div>
+            <h3>Normalize <span class="tag">PDAL on DO CPU droplet</span></h3>
+            <p>Strip duplicates, reproject to a survey-grade CRS (configurable, EPSG:6442 default for AL state plane), thin to a working density if requested. Output <code>normalized.copc</code>. ~1–5 min per tract on c-8.</p>
+          </div>
+        </div>
+        <div class="timeline-step">
+          <div class="timeline-num">3</div>
+          <div>
+            <h3>Classify (geometric baseline) <span class="tag">CSF / SMRF</span></h3>
+            <p>Run <code>filters.smrf</code> (Simple Morphological Filter) and <code>filters.csf</code> (Cloth Simulation) in parallel as the geometric safety net. Always runs, regardless of ML. Disagreement regions auto-flag for QC.</p>
+          </div>
+        </div>
+        <div class="timeline-step">
+          <div class="timeline-num">4</div>
+          <div>
+            <h3>Classify (ML) <span class="tag">PTv3 + Sonata · L40S</span></h3>
+            <p>Sonata-pretrained PTv3 fine-tuned on Weygand tracts. ONNX inference on the L40S. Falls back to SuperPoint Transformer (200× fewer params, 3× faster) for cost-sensitive jobs. Writes <code>classified.copc</code> + per-point confidence.</p>
+          </div>
+        </div>
+        <div class="timeline-step">
+          <div class="timeline-num">5</div>
+          <div>
+            <h3>QC <span class="tag">browser, append-only delta</span></h3>
+            <p>Surveyor opens <code>classified.copc</code> in Potree v2 embed. Edits stored as sparse Parquet delta (<code>edits/vN.delta.parquet</code>) — never rewriting source. Operations log (<code>ops.jsonl</code>) keeps polygon coords, user, timestamp for PLS audit trail.</p>
+          </div>
+        </div>
+        <div class="timeline-step">
+          <div class="timeline-num">6</div>
+          <div>
+            <h3>Export <span class="tag">LAS / DTM / SHP / DWG / E57</span></h3>
+            <p>PDAL pipeline merges source COPC + deltas → final <code>job.las</code> + <code>dtm.tif</code> (Cloud Optimized GeoTIFF) + <code>contours.shp</code> + <code>breaklines.dwg</code> (ezdxf) + <code>job.e57</code>. Hot-folder push to customer Google Drive via the existing Weygand Drive token broker.</p>
+          </div>
+        </div>
+        <div class="timeline-step">
+          <div class="timeline-num">7</div>
+          <div>
+            <h3>Deliver <span class="tag">share link + email + Trimble Connect</span></h3>
+            <p>Resend email with download bundle + Cesium share-link URL. Optional one-click push to Trimble Connect (their API, almost no competitor automates this). Customer iPad on a job site opens the share link, sees their site over satellite.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="section-eyebrow" style="margin-top:3rem;">ML training plan</div>
+      <h2 class="section-title">Sonata pretraining → PTv3 fine-tune → active learning loop.</h2>
+      <p class="section-lede">
+        The literature has matured. Pointcept (PTv3 + Sonata) is the most important repo in the field. We don't need to invent — we need to label well and iterate.
+      </p>
+
+      <div class="b-table-wrap">
+        <table class="b-table">
+          <thead>
+            <tr><th>Model</th><th>DALES Ground IoU</th><th>Throughput (A100)</th><th>Train time</th><th>Use</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><strong>PTv3</strong></td><td>~97+</td><td>500K–1.5M pts/s</td><td>24–72h scratch / 2–6h fine-tune</td><td>Primary, with Sonata pretraining</td></tr>
+            <tr><td><strong>SuperPoint Transformer</strong></td><td>~96</td><td>~3–5M pts/s</td><td>3h</td><td>Cost-attractive fast path</td></tr>
+            <tr><td>KPConv-X</td><td>~97</td><td>700K–1.5M pts/s</td><td>8–20h</td><td>Ablation / second opinion</td></tr>
+            <tr><td>CSF / SMRF (geometric)</td><td>~92</td><td>CPU-only</td><td>n/a</td><td>Always-on safety net</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3 style="font-family:var(--font-display);color:var(--gold);font-size:1.15rem;margin:2rem 0 0.75rem;">Labeling investment</h3>
+      <ul style="color:var(--text-muted);line-height:1.7;">
+        <li><strong>Target:</strong> 5–15 ha of carefully labeled Weygand tracts, stratified across canopy diversity (open pasture, ag, suburban canopy, hardwood, pine, mixed, swamp, riparian).</li>
+        <li><strong>Time:</strong> 2–4 weeks of one surveyor in TerraScan or LP360 (tools they already know).</li>
+        <li><strong>Cost:</strong> ~$5–20K in surveyor time. Trivial vs. compute ($500–2.5K).</li>
+        <li><strong>Smart pipeline:</strong> Run CSF first → surveyor corrects vegetation areas only → 2–3× efficiency gain. CSF-confident regions become free pseudo-labels via active learning.</li>
+        <li><strong>Synthetic augmentation:</strong> Helios++ over Blender Sapling procedural forest at 60–95% canopy closure. Pretrain on synthetic, fine-tune on real (Winiwarter 2022).</li>
+      </ul>
+
+      <div class="section-eyebrow" style="margin-top:3rem;">Unit economics</div>
+      <h2 class="section-title">$0.05–0.50 COGS per km² · $50–800 price · &gt;95% gross margin.</h2>
+      <div class="b-table-wrap">
+        <table class="b-table">
+          <thead>
+            <tr><th>Stack</th><th>50M-pt tile</th><th>200M-pt tile</th><th>500M-pt tile</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>CPU PDAL + CSF (16-core c7i)</td><td>2–5 min · $0.02–0.05</td><td>10–20 min · $0.10–0.20</td><td>30–60 min · $0.25–0.50</td></tr>
+            <tr><td>GPU PTv3 (A100 spot)</td><td>60–180 s · $0.02–0.09</td><td>4–12 min · $0.10–0.40</td><td>10–30 min · $0.30–1.00</td></tr>
+            <tr><td>GPU SPT (A100 spot)</td><td>20–60 s · $0.01–0.03</td><td>1–4 min · $0.03–0.13</td><td>3–10 min · $0.10–0.33</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p style="color:var(--text-subtle);margin-top:1rem;">
+        At 50 jobs/month × 30 GB avg = $2,375/mo all-in (R2 storage + DO L40S + CPU droplet + Modal burst + D1). Charge $300–800/job, margin is real. R2 zero-egress is the structural advantage that makes this economic.
+      </p>
+    </div>
+  </section>
+</Layout>

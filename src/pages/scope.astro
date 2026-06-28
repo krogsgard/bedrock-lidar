@@ -1,0 +1,99 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout title="Scope brief" active="scope">
+  <section class="section" style="padding-top:5rem;">
+    <div class="container">
+      <div class="section-eyebrow">Decision-ready scope</div>
+      <h2 class="section-title">Cloud-native drone lidar ground classification — full brief.</h2>
+      <p class="section-lede">
+        Prepared by May (Brian's chief of staff) on 2026-06-27. The full document covers the problem, ML approach, cloud architecture, QC editing data model, exports, honest risks, phased build plan, recommended Phase 0, and bottom line. Reproduced verbatim below.
+      </p>
+
+      <div class="feature-banner">
+        <div class="banner-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+        </div>
+        <div>
+          <h4>The bottom line</h4>
+          <p>Internal-tool ROI is positive on its own (~$50–150K/yr labor savings). Regional SaaS upside ($60–160K ARR) is realistic. Window is 18–36 months before GeoCue's AI Ground+ closes the heavy-vegetation gap. Single highest-leverage move: Phase 0 spike on three real flights. Two weeks, ~$500 in cloud spend.</p>
+        </div>
+      </div>
+
+      <div class="prose">
+
+<h2>0. Executive Summary</h2>
+<p><strong>What's being scoped.</strong> A cloud-native SaaS that takes raw drone lidar (10–100 GB .las/.laz), produces a best-in-class ground classification specifically for <strong>heavy-vegetation tracts</strong>, lets you QC the result in a browser, and exports clean deliverables into LP360 / Carlson / Civil 3D / TBC. Built first for Weygand, designed to be sold to other surveying firms.</p>
+<p><strong>Is it feasible in 2026?</strong> Yes — every piece is buildable with open source or commodity infra. The ML literature (PTv3, KPConv-X, SuperPoint Transformer, Sonata self-supervised pretraining) has matured to where a small team can train a model that beats CSF/PMF/TerraScan on dense canopy.</p>
+<p><strong>Is there a moat?</strong> One real one: <strong>a proprietary labeled dataset of Southeast US heavy-vegetation lidar tracts</strong>, captured by Weygand's own flights, corrected by your own surveyors. Nobody else has it and nobody else can build it without your sensors and your terrain.</p>
+
+<h2>1. The Problem We're Solving</h2>
+<p>Every other lidar tool already classifies ground "well enough" in open terrain. The brutal failure mode — the one that costs your surveyors hours per job — is <strong>dense canopy with sparse ground returns</strong>:</p>
+<ul>
+  <li>Mixed Southeast hardwood/pine</li>
+  <li>Pine plantation with understory</li>
+  <li>Cypress swamp</li>
+  <li>Laurel / rhododendron thickets</li>
+  <li>Kudzu</li>
+</ul>
+<p>In those conditions, per-pulse ground return rates can drop below 1 pt/m² even at 60 pts/m² aggregate density. Geometric filters (CSF, PMF, Axelsson's TIN-densification that powers TerraScan) all share the same failure mode: they assume "lowest local point = ground." When the lowest local point is actually a root buttress or low understory, the DTM floats 0.5–2m high.</p>
+<p>Modern ML semantic segmentation models, given proper training data, see this case differently. 5–15% IoU improvement on dense forest specifically.</p>
+
+<h2>2. Competitive Landscape</h2>
+<p><strong>Where the gap is:</strong> nobody combines all four — (a) cloud-native, (b) surveyor workflow & stamped deliverables, (c) heavy-vegetation ML specialty, (d) per-tract pricing under $5K/yr.</p>
+<ul>
+  <li>LP360 has (b)</li>
+  <li>DroneDeploy has (a)</li>
+  <li>Lidarvisor has (a)+(d)</li>
+  <li>Virtual Surveyor has (b) + bare-earth focus but is desktop-only</li>
+  <li><strong>No one has the full stack.</strong></li>
+</ul>
+
+<h2>3. ML Approach</h2>
+<p>Recommended stack (Pointcept library):</p>
+<ol>
+  <li><strong>Primary backbone:</strong> Point Transformer v3 fine-tuned from Sonata self-supervised pretrained checkpoint.</li>
+  <li><strong>Fast-path fallback:</strong> SuperPoint Transformer (200× fewer params, 3 hr training).</li>
+  <li><strong>Always run CSF in parallel</strong> as the geometric baseline. Disagreement &gt; 5% auto-flagged for human QC.</li>
+</ol>
+<p>Realistic compute spend for full development + 20–30 ablation runs: <strong>$500–2,500</strong>. Trivial vs. labeling cost ($5–20K surveyor time).</p>
+
+<h2>4. Cloud Architecture</h2>
+<p><strong>Storage format: COPC, full stop.</strong> Won the format war by 2024. Adopted by USGS 3DEP, OpenTopography, every major drone vendor. A COPC file is also a valid LAZ 1.4 — zero migration cost.</p>
+<p><strong>Recommended compute:</strong> R2 storage + DigitalOcean baseline GPU + Modal burst.</p>
+<ul>
+  <li>R2 zero-egress = browser streams a 50GB COPC for free</li>
+  <li>One always-on L40S handles steady state</li>
+  <li>Modal handles burst (10s cold-start on warm pool, pay-per-second)</li>
+  <li>D1 as queue is fine to ~100 concurrent jobs</li>
+</ul>
+
+<h2>5. Honest Risks</h2>
+<ul>
+  <li><strong>GeoCue's AI Ground+ and AI Forestry</strong> are aimed at exactly this wedge. 18–36 month window.</li>
+  <li><strong>Distribution to small firms is slow.</strong> Conservative buyers, long sales cycles.</li>
+  <li><strong>Per-tract pricing economics are tight at low volume.</strong> Lidarvisor at $89/mo struggles with margins.</li>
+  <li><strong>The "internal tool" trap.</strong> Productization, support, billing, onboarding are 5× the engineering work.</li>
+</ul>
+
+<h2>6. Phased Build Plan</h2>
+<ul>
+  <li><strong>Phase 0 (2 wks):</strong> PDAL+Cesium spike. Three real flights. Measure vs LP360.</li>
+  <li><strong>Phase 1 (6 wks):</strong> Internal pipeline. First paid Weygand job.</li>
+  <li><strong>Phase 2 (8 wks):</strong> QC viewer. Replace LP360 internally.</li>
+  <li><strong>Phase 3 (10 wks):</strong> ML model. ≥95% canopy IoU gate.</li>
+  <li><strong>Phase 4 (8 wks):</strong> Customer SaaS. First paying outside customer.</li>
+</ul>
+
+<h2>7. Bottom Line</h2>
+<blockquote>
+  The internal-tool ROI alone is positive — that's the floor and it's a strong floor. The SaaS upside is real but takes commitment and probably a second hire. The single most valuable asset you'd create is the labeled dataset, not the software. Phase 0 is two weeks and a few hundred dollars in cloud spend. That's the only commitment to make today.
+</blockquote>
+
+<p style="margin-top:2rem;"><a href="https://github.com/krogsgard/bedrock-lidar/blob/main/docs/scope-2026-06-27.md" target="_blank" rel="noopener" class="btn btn-secondary">Read full brief on GitHub ↗</a></p>
+
+      </div>
+    </div>
+  </section>
+</Layout>

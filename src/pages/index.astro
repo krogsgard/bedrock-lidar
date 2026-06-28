@@ -1,0 +1,202 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout title="Cloud-native LIDAR ground classification" active="home">
+  <section class="bedrock-hero">
+    <div class="container">
+      <span class="eyebrow">
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="6"/></svg>
+        v0 prototype · public data only
+      </span>
+      <h1>
+        Find the ground.<br />
+        <span class="accent">Under the canopy.</span>
+      </h1>
+      <p class="lede">
+        Bedrock is a cloud-native LIDAR ground classification pipeline tuned for the failure case nobody else solves well: dense Southeast US canopy with sparse ground returns. Browser-first QC, COPC-streamed, surveyor-built.
+      </p>
+      <div class="bedrock-cta-row">
+        <a href="/viewer/" class="btn btn-primary">
+          Open the viewer
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+        </a>
+        <a href="/scope/" class="btn btn-secondary">Read the scope</a>
+        <a href="/pipeline/" class="btn btn-secondary">How it works</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container">
+      <div class="section-eyebrow">The problem</div>
+      <h2 class="section-title">Every other tool floats the ground 0.5–2m high under heavy canopy.</h2>
+      <p class="section-lede">
+        Geometric filters (CSF, PMF, Axelsson TIN-densification) all share one failure mode: they assume "lowest local point = ground." In dense pine plantation, hardwood, cypress swamp, or kudzu, the lowest local point is often a root buttress or low understory. The DTM floats high and looks like a checkerboard of bumps. Surveyors spend 15–40 hours per heavy-canopy tract cleaning that up in LP360 or TerraScan.
+      </p>
+
+      <div class="stat-row">
+        <div class="stat">
+          <div class="stat-val">15–40h</div>
+          <div class="stat-label">manual cleanup / heavy-canopy tract</div>
+          <div class="stat-sub">at $75/hr loaded = $1.1K–3K per job</div>
+        </div>
+        <div class="stat">
+          <div class="stat-val">5–15%</div>
+          <div class="stat-label">ML IoU lift on dense forest</div>
+          <div class="stat-sub">PTv3 + Sonata pretraining</div>
+        </div>
+        <div class="stat">
+          <div class="stat-val">$0</div>
+          <div class="stat-label">R2 egress vs $0.09/GB AWS</div>
+          <div class="stat-sub">structural margin advantage</div>
+        </div>
+        <div class="stat">
+          <div class="stat-val">18–36mo</div>
+          <div class="stat-label">window before incumbents catch up</div>
+          <div class="stat-sub">GeoCue AI Ground+ announced 2026</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container">
+      <div class="section-eyebrow">What v0 ships</div>
+      <h2 class="section-title">The scaffold. Streaming public data. No upload, no ML, no auth.</h2>
+      <p class="section-lede">
+        v0 is the spike: prove the COPC-from-R2 → CesiumJS streaming architecture works, anchor the brand and UX, get a real lidar dataset rendering in a browser. The real pipeline lands in Phase 1.
+      </p>
+
+      <div class="b-card-grid">
+        <a href="/viewer/" class="b-card">
+          <div class="b-card-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>
+          </div>
+          <h3>Viewer</h3>
+          <p>CesiumJS streaming COPC over Cesium World Terrain + satellite. Try a public USGS 3DEP tile from Alabama.</p>
+        </a>
+        <a href="/datasets/" class="b-card">
+          <div class="b-card-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
+          </div>
+          <h3>Datasets</h3>
+          <p>Public COPC and LAZ sources we can stream today: USGS 3DEP, OpenTopography, DALES, Hessigheim, AWS Open Data.</p>
+        </a>
+        <a href="/pipeline/" class="b-card">
+          <div class="b-card-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+          </div>
+          <h3>Pipeline</h3>
+          <p>PDAL → CSF → COPC → R2 → CesiumJS. Same boxes the v1 ML pipeline will fit inside.</p>
+        </a>
+        <a href="/scope/" class="b-card">
+          <div class="b-card-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/></svg>
+          </div>
+          <h3>Scope brief</h3>
+          <p>The full scoping report — competitors, ML strategy, unit economics, phased plan, honest risks.</p>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container">
+      <div class="section-eyebrow">Why this stack</div>
+      <h2 class="section-title">COPC + R2 zero-egress + CesiumJS terrain — built for 1B+ point streaming.</h2>
+      <p class="section-lede">
+        Cloud Optimized Point Cloud is a valid LAZ 1.4 file with octree indexing baked in. Range-read from Cloudflare R2 with $0 egress. CesiumJS handles the terrain context and mobile rendering. The viewer streams what's in frame, not the whole file. A 50 GB tract opens on an iPad.
+      </p>
+
+      <div class="b-card-grid">
+        <div class="b-card">
+          <div class="b-card-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 17 9 11 13 15 21 7"/><polyline points="14 7 21 7 21 14"/></svg>
+          </div>
+          <h3>R2 zero-egress</h3>
+          <p>$0.015/GB-month storage, $0 egress. A 500M-point LAZ at 1.5–3 GB streams free. AWS would eat your margin at $0.09/GB.</p>
+        </div>
+        <div class="b-card">
+          <div class="b-card-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>
+          </div>
+          <h3>COPC is the format</h3>
+          <p>Won the streaming format war by 2024. USGS 3DEP, OpenTopography, IGN France, Sweden, NZ all standardized. Also a valid LAZ — every CAD reads it.</p>
+        </div>
+        <div class="b-card">
+          <div class="b-card-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/></svg>
+          </div>
+          <h3>PTv3 + Sonata</h3>
+          <p>Current SOTA on every outdoor benchmark, with self-supervised pretraining that cuts labeling needs 3–10×. Fine-tunes from a checkpoint in 4–8 hrs on an A100.</p>
+        </div>
+        <div class="b-card">
+          <div class="b-card-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+          </div>
+          <h3>Append-only edits</h3>
+          <p>QC edits stored as sparse Parquet delta, never rewriting the source COPC. Free undo, audit trail, PLS-signable history, 100× cheaper I/O than tile rewrites.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container">
+      <div class="section-eyebrow">Roadmap</div>
+      <h2 class="section-title">Phase 0 → SaaS in five gates.</h2>
+      <p class="section-lede">
+        Every phase has a verifiable demo and a go/no-go gate. The internal-tool ROI is the floor. The SaaS upside is the option.
+      </p>
+
+      <div class="timeline">
+        <div class="timeline-step">
+          <div class="timeline-num">0</div>
+          <div>
+            <h3>Spike <span class="tag">2 weeks</span> <span class="tag done">v0 shipped</span></h3>
+            <p>PDAL → CSF → COPC pipeline, public-data CesiumJS viewer, brand &amp; scope landing site. Gate: pipeline runs end-to-end.</p>
+          </div>
+        </div>
+        <div class="timeline-step">
+          <div class="timeline-num">1</div>
+          <div>
+            <h3>Internal pipeline <span class="tag">6 weeks</span> <span class="tag todo">next</span></h3>
+            <p>Job queue (D1), upload UI, DO GPU droplet running CSF + baseline ML, COPC+DTM+contours export. Gate: first paid Weygand job through.</p>
+          </div>
+        </div>
+        <div class="timeline-step">
+          <div class="timeline-num">2</div>
+          <div>
+            <h3>QC viewer <span class="tag">8 weeks</span> <span class="tag todo">next</span></h3>
+            <p>Potree v2 embed, delta-edit layer (brush + polygon + undo), export with merged edits. Gate: in-house tech replaces LP360 on a real job.</p>
+          </div>
+        </div>
+        <div class="timeline-step">
+          <div class="timeline-num">3</div>
+          <div>
+            <h3>ML model <span class="tag">10 weeks</span> <span class="tag todo">next</span></h3>
+            <p>PTv3 fine-tuned from Sonata, trained on 20+ Weygand tracts. A/B vs SMRF/CSF on 20 jobs. Gate: ≥95% canopy IoU AND ≥$30K/yr internal savings.</p>
+          </div>
+        </div>
+        <div class="timeline-step">
+          <div class="timeline-num">4</div>
+          <div>
+            <h3>Customer SaaS <span class="tag">8 weeks</span> <span class="tag todo">next</span></h3>
+            <p>Multi-tenant auth, Stripe billing, share links, mobile viewer, Trimble Connect push. Gate: first paying customer outside Weygand.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="feature-banner">
+        <div class="banner-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+        </div>
+        <div>
+          <h4>Phase 0 decision gate (you are here)</h4>
+          <p>Real Weygand flights pushed through PDAL+Cesium. Measured against LP360 baseline. Two weeks, ~$500 in compute, real numbers instead of speculation.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+</Layout>
